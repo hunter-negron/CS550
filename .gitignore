@@ -1,0 +1,4 @@
+# ignore all files except src created by eclipse
+/bin/
+.classpath
+.project
