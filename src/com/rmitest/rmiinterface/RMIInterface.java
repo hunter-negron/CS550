@@ -5,6 +5,6 @@ import java.rmi.RemoteException;
 
 public interface RMIInterface extends Remote {
 
-    public String helloTo(String name) throws RemoteException;
+    public String helloTo(String name, String filename, byte[] data, int len) throws RemoteException;
 
 }
