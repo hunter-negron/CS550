@@ -12,15 +12,14 @@ import java.io.FileOutputStream;
 
 import javax.swing.JOptionPane;
 
-//import com.filesharer.indexserver.IndexServerInterface;
+import com.filesharer.indexserver.IndexServerInterface;
 
 public class Peer extends UnicastRemoteObject implements PeerInterface {
 
     private static final long serialVersionUID = 1L;
     public static int peerId;
 
-    protected Peer()
-      throws RemoteException {
+    protected Peer() throws RemoteException {
       super();
     }
 
@@ -28,6 +27,7 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
     public boolean requestFile(PeerInterface p, String filename) throws RemoteException {
       String response = "";
 
+      // Read specified file from disk and send to specified peer
       try {
         File f1 = new File(filename);
         FileInputStream in = new FileInputStream(f1);
@@ -51,6 +51,7 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
     public boolean sendFile(String filename, byte[] data, int len) throws RemoteException {
       System.err.println("sendFile " + peerId + " receiving file named " + filename);
 
+      // Write the received data to disk with the given filename
       try {
       	File f = new File(filename);
       	f.createNewFile();
@@ -67,6 +68,7 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
     }
 
     public static class Server extends Thread {
+      // Basic server thread to wait for RMI requests
       public void run() {
         try {
           Naming.rebind("//localhost/peer" + peerId, new Peer());
@@ -80,17 +82,33 @@ public class Peer extends UnicastRemoteObject implements PeerInterface {
     }
 
     public static void main(String args[]) {
-      peerId = Integer.parseInt(args[0]);
+      // Register with the index server
+      try {
+        IndexServerInterface index = (IndexServerInterface) Naming.lookup("//localhost/index");
+        peerId = index.register(args); // only index files given as arguments for now
+      }
+      catch(Exception e) {
+        e.printStackTrace();
+      }
+
+      // Start the server (which needs the peerId)
       Server s = new Server();
       Thread sThread = new Thread(s);
       sThread.start();
 
+      // Primitive file retrieval: prompt until empty string is entered
       try {
+        String svr, fn;
         Peer client = new Peer();
-        String svr = JOptionPane.showInputDialog("Which peer?");
-        String fn = JOptionPane.showInputDialog("Which file?");
-        PeerInterface look_up = (PeerInterface) Naming.lookup("//localhost/peer" + svr);
-        look_up.requestFile(client, fn);
+
+        svr = JOptionPane.showInputDialog("Which peer?");
+        fn = JOptionPane.showInputDialog("Which file?");
+        do {
+          PeerInterface look_up = (PeerInterface) Naming.lookup("//localhost/peer" + svr);
+          look_up.requestFile(client, fn);
+          svr = JOptionPane.showInputDialog("Which peer?");
+          fn = JOptionPane.showInputDialog("Which file?");
+        } while(!svr.equals(""));
       }
       catch(Exception e) {
         e.printStackTrace();
