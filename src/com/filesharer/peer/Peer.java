@@ -12,9 +12,9 @@ import java.io.FileOutputStream;
 
 import javax.swing.JOptionPane;
 
-import com.filesharer.ipeer.IPeer;
+//import com.filesharer.indexserver.IndexServerInterface;
 
-public class Peer extends UnicastRemoteObject implements IPeer {
+public class Peer extends UnicastRemoteObject implements PeerInterface {
 
     private static final long serialVersionUID = 1L;
     public static int peerId;
@@ -25,12 +25,11 @@ public class Peer extends UnicastRemoteObject implements IPeer {
     }
 
     @Override
-    public boolean requestFile(IPeer p)
-      throws RemoteException {
+    public boolean requestFile(PeerInterface p, String filename) throws RemoteException {
       String response = "";
 
       try {
-        File f1 = new File("sample.txt");
+        File f1 = new File(filename);
         FileInputStream in = new FileInputStream(f1);
         byte[] mydata = new byte[1024*1024];
         int mylen = in.read(mydata);
@@ -49,12 +48,11 @@ public class Peer extends UnicastRemoteObject implements IPeer {
     }
 
     @Override
-    public boolean sendFile(String filename, byte[] data, int len)
-      throws RemoteException {
+    public boolean sendFile(String filename, byte[] data, int len) throws RemoteException {
       System.err.println("sendFile " + peerId + " receiving file named " + filename);
 
       try {
-      	File f = new File("___" + filename);
+      	File f = new File(filename);
       	f.createNewFile();
       	FileOutputStream out = new FileOutputStream(f,true);
       	out.write(data,0,len);
@@ -90,8 +88,9 @@ public class Peer extends UnicastRemoteObject implements IPeer {
       try {
         Peer client = new Peer();
         String svr = JOptionPane.showInputDialog("Which peer?");
-        IPeer look_up = (IPeer) Naming.lookup("//localhost/peer" + svr);
-        look_up.requestFile(client);
+        String fn = JOptionPane.showInputDialog("Which file?");
+        PeerInterface look_up = (PeerInterface) Naming.lookup("//localhost/peer" + svr);
+        look_up.requestFile(client, fn);
       }
       catch(Exception e) {
         e.printStackTrace();
