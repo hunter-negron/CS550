@@ -1,3 +1,3 @@
 cd src
-# java com.test.IndexTest
-java com.test.PeerTest
+java -cp ./build com.test.IndexTest
+# java com.test.PeerTest
