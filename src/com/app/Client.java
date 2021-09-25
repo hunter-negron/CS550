@@ -9,7 +9,7 @@ import com.lib.peer_client.PeerClient;
 // public int register(String ip, String lookupString, Vector<String> filenames)
 
 public class Client {
-  final static String rmiStr = "//localhost/peer";
+  static String rmiStr = "//localhost/peer";
   final static String rmiServerStr = "//localhost/central_server";
   static int myPeerId;
 
@@ -29,14 +29,6 @@ public class Client {
 
   public static void main(String[] args) {
     try{
-      PeerClient pc = new PeerClient(rmiStr); // need to get these strings dynamically
-    }
-    catch (Exception ex) {
-      System.err.println("Client Exception while creating peer client: " + ex.toString());
-      ex.printStackTrace();
-    }
-
-    try{
       centralServer = (RMIServerInterface)Naming.lookup("//localhost/central_server");
     }
     catch (Exception ex) {
@@ -52,10 +44,19 @@ public class Client {
 
     try{
       myPeerId = centralServer.register(rmiStr, files);
+      rmiStr += myPeerId;
       System.out.println("Your peer id is : " + myPeerId);
     }
     catch (Exception ex) {
       System.err.println("Client Exception while REGISTERING to central sever: " + ex.toString());
+      ex.printStackTrace();
+    }
+
+    try{
+      PeerClient pc = new PeerClient(rmiStr, myPeerId); // need to get these strings dynamically
+    }
+    catch (Exception ex) {
+      System.err.println("Client Exception while creating peer client: " + ex.toString());
       ex.printStackTrace();
     }
 

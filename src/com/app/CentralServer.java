@@ -1,5 +1,6 @@
 package com.app.server;
 
+import java.util.*;
 import java.rmi.Naming;
 
 import com.lib.interfaces.RMIServerInterface;
@@ -17,7 +18,11 @@ public class CentralServer {
     }
 
     try{
-      PeerClient pc = new PeerClient("//localhost/MyServer");
+      String rmiPeerStr = "//localhost/MyServer";
+      RMIServerInterface centralServer = (RMIServerInterface)Naming.lookup("//localhost/central_server");
+      int myPeerId = centralServer.register(rmiPeerStr, new Vector<String>());
+      rmiPeerStr += myPeerId;
+      PeerClient pc = new PeerClient(rmiPeerStr, myPeerId);
     }
     catch (Exception ex) {
       System.err.println("CentralServer Exception while creating client: " + ex.toString());

@@ -9,8 +9,11 @@ import java.rmi.server.UnicastRemoteObject;
 import com.lib.interfaces.RMIClientInterface;
 
 public class PeerClient extends UnicastRemoteObject implements RMIClientInterface {
-  public PeerClient(String rmiInterfaceString) throws RemoteException {
-    System.out.println("Peer client created.");
+  private int id;
+
+  public PeerClient(String rmiInterfaceString, int peerId) throws RemoteException {
+    id = peerId;
+    System.out.println("Peer client " + id + " created.");
 
     try{
       System.out.println("Binding Client RMI Interface to " + rmiInterfaceString);
