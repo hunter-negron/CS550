@@ -24,7 +24,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     rpiIndex = new HashMap<Integer, RegisteredPeerInfo>();
 
     try{
-      System.out.println("Binding RMI Interface to " + rmiInterfaceString);
+      System.out.println("Binding Server RMI Interface to " + rmiInterfaceString);
       // Binding to the RMI Interface
       Naming.rebind(rmiInterfaceString, this);
     }
@@ -35,11 +35,10 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
   }
 
   @Override
-  public int register(String ip, String lookupString, Vector<String> filenames) throws RemoteException {
+  public int register(String lookupString, Vector<String> filenames) throws RemoteException {
     System.out.println("register called!");
     RegisteredPeerInfo rpi = new RegisteredPeerInfo();
 
-    rpi.ip = ip;
     rpi.lookupString = lookupString;
     rpi.peerId = peerId++;
     rpi.filenames = filenames;
@@ -65,9 +64,10 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
   }
 
   @Override
-  public int search(String filename) throws RemoteException {
+  public ArrayList<Integer> search(String filename) throws RemoteException {
     System.out.println("search called!");
-    return 0;
+    return fileIndex.get(filename);
+    // return 0;
   }
 
   @Override

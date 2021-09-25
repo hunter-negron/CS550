@@ -3,4 +3,4 @@
 build
 .classpath
 .project
-.class
+*.class

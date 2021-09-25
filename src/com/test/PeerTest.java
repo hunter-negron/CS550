@@ -10,7 +10,7 @@ public class PeerTest {
 
     // Handle RMI registration for the TA when he runs the project
     try{
-      PeerClient pc = new PeerClient();
+      PeerClient pc = new PeerClient("//localhost/peer");
       pc.retrieve("foo");
     }
     catch (Exception ex) {
