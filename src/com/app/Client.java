@@ -3,13 +3,13 @@ package com.app.client;
 import java.util.*;
 import java.rmi.Naming;
 
-import com.lib.interfaces.RMIServerInterface;
+import com.lib.interfaces.*;
 import com.lib.peer_client.PeerClient;
 
 // public int register(String ip, String lookupString, Vector<String> filenames)
 
 public class Client {
-  static String rmiStr = "//localhost/peer";
+  final static String rmiStr = "//localhost/peer";
   final static String rmiServerStr = "//localhost/central_server";
   static int myPeerId;
 
@@ -25,6 +25,19 @@ public class Client {
 
   public static void ReadSharedDirectory(){
     // Read all the files in the directory and return
+  }
+
+  public static void retrieveFile(String filename, int peerId) {
+    try{
+      System.out.println("Retrieving file \"" + filename + "\" from peer " + peerId);
+      RMIClientInterface peer = (RMIClientInterface) Naming.lookup(rmiStr + peerId);
+      int val = peer.retrieve(filename);
+      System.out.println("VAL: " + val);
+    }
+    catch (Exception ex) {
+      System.err.println("Client Exception while CONNECTING to peer client: " + ex.toString());
+      ex.printStackTrace();
+    }
   }
 
   public static void main(String[] args) {
@@ -44,7 +57,6 @@ public class Client {
 
     try{
       myPeerId = centralServer.register(rmiStr, files);
-      rmiStr += myPeerId;
       System.out.println("Your peer id is : " + myPeerId);
     }
     catch (Exception ex) {
@@ -85,6 +97,15 @@ public class Client {
           }
           System.out.println();
           PrintMessageLn("Client list end");
+
+          System.out.println("Select a client from which to retrieve the file.");
+          int clientSelect = Integer.parseInt(sc.nextLine());
+          if(!clientList.contains(clientSelect)) {
+            System.out.println("Invalid client selection.");
+            continue;
+          }
+
+          retrieveFile(strInput, clientSelect);
         }
         catch (Exception ex) {
           System.err.println("Client Exception while SEARCHING to central sever: " + ex.toString());

@@ -21,7 +21,6 @@ public class CentralServer {
       String rmiPeerStr = "//localhost/MyServer";
       RMIServerInterface centralServer = (RMIServerInterface)Naming.lookup("//localhost/central_server");
       int myPeerId = centralServer.register(rmiPeerStr, new Vector<String>());
-      rmiPeerStr += myPeerId;
       PeerClient pc = new PeerClient(rmiPeerStr, myPeerId);
     }
     catch (Exception ex) {

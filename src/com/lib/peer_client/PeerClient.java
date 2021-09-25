@@ -16,9 +16,9 @@ public class PeerClient extends UnicastRemoteObject implements RMIClientInterfac
     System.out.println("Peer client " + id + " created.");
 
     try{
-      System.out.println("Binding Client RMI Interface to " + rmiInterfaceString);
+      System.out.println("Binding Client RMI Interface to " + rmiInterfaceString + id);
       // Binding to the RMI Interface
-      Naming.rebind(rmiInterfaceString, this);
+      Naming.rebind(rmiInterfaceString + id, this);
     }
     catch (Exception ex) {
       System.err.println("PeerClient Exception while binding RMI Interface: " + ex.toString());
@@ -28,7 +28,7 @@ public class PeerClient extends UnicastRemoteObject implements RMIClientInterfac
 
   @Override
   public int retrieve(String filename) throws RemoteException {
-    System.out.println("Client Retrieve is called.");
-    return 0;
+    System.out.println("Client " + id + " Retrieve is called.");
+    return id;
   }
 }
