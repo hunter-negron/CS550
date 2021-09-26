@@ -13,9 +13,11 @@ import com.lib.interfaces.RMIClientInterface;
 
 public class PeerClient extends UnicastRemoteObject implements RMIClientInterface {
   private int id;
+  String dir;
 
-  public PeerClient(String rmiInterfaceString, int peerId) throws RemoteException {
+  public PeerClient(String rmiInterfaceString, int peerId, String directory) throws RemoteException {
     id = peerId;
+    dir = directory;
     System.out.println("Peer client " + id + " created.");
 
     try{
@@ -39,7 +41,7 @@ public class PeerClient extends UnicastRemoteObject implements RMIClientInterfac
     ret.len = 0;
 
     try {
-      File f1 = new File(filename);
+      File f1 = new File(dir, filename);
       FileInputStream in = new FileInputStream(f1);
       ret.len = in.read(ret.data);
     }

@@ -14,6 +14,7 @@ public class Client {
   final static String rmiStr = "//localhost/peer";
   final static String rmiServerStr = "//localhost/central_server";
   static int myPeerId;
+  static String dir;
 
   private static RMIServerInterface centralServer;
 
@@ -25,8 +26,17 @@ public class Client {
     System.out.println("Enter the file name you would like to search.");
   }
 
-  public static void ReadSharedDirectory(){
+  public static Vector<String> ReadSharedDirectory(File folder){
     // Read all the files in the directory and return
+    Vector<String> filenames = new Vector<String>();
+
+    for(File f : folder.listFiles()) {
+      if(!f.isDirectory() && f.length() <= 1024*1024) {
+        filenames.add(f.getName());
+      }
+    }
+
+    return filenames;
   }
 
   public static void retrieveFile(String filename, int peerId) {
@@ -35,7 +45,7 @@ public class Client {
       RMIClientInterface peer = (RMIClientInterface) Naming.lookup(rmiStr + peerId);
       FileInfo fileinfo = peer.retrieve(filename);
       try {
-      	File f = new File(fileinfo.filename);
+      	File f = new File(dir, fileinfo.filename);
       	f.createNewFile();
       	FileOutputStream out = new FileOutputStream(f,true);
       	out.write(fileinfo.data,0,fileinfo.len);
@@ -55,7 +65,7 @@ public class Client {
 
   public static void main(String[] args) {
     try{
-      centralServer = (RMIServerInterface)Naming.lookup("//localhost/central_server");
+      centralServer = (RMIServerInterface)Naming.lookup(rmiServerStr);
     }
     catch (Exception ex) {
       System.err.println("Client Exception while CONNECTING to central sever: " + ex.toString());
@@ -63,10 +73,20 @@ public class Client {
     }
 
     // Read the files using ReadSharedDirectory() and put it into the vector here!
-    Vector<String> files = new Vector<String>();
-    files.add("foo");
-    files.add("moo");
-    files.add("boo");
+    if(args.length != 1) {
+      System.out.println("Please specify one directory.");
+      System.exit(0);
+    }
+
+    dir = args[0];
+    File folder = new File(dir);
+
+    if(!folder.isDirectory() || !folder.exists()) {
+      System.out.println("The folder you entered \"" + dir + "\" is not a valid directory.");
+      System.exit(0);
+    }
+
+    Vector<String> files = ReadSharedDirectory(folder);
 
     try{
       myPeerId = centralServer.register(rmiStr, files);
@@ -78,7 +98,7 @@ public class Client {
     }
 
     try{
-      PeerClient pc = new PeerClient(rmiStr, myPeerId); // need to get these strings dynamically
+      PeerClient pc = new PeerClient(rmiStr, myPeerId, args[0]); // need to get these strings dynamically
     }
     catch (Exception ex) {
       System.err.println("Client Exception while creating peer client: " + ex.toString());

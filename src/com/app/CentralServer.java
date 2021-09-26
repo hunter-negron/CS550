@@ -21,7 +21,7 @@ public class CentralServer {
       String rmiPeerStr = "//localhost/MyServer";
       RMIServerInterface centralServer = (RMIServerInterface)Naming.lookup("//localhost/central_server");
       int myPeerId = centralServer.register(rmiPeerStr, new Vector<String>());
-      PeerClient pc = new PeerClient(rmiPeerStr, myPeerId);
+      PeerClient pc = new PeerClient(rmiPeerStr, myPeerId, ".");
     }
     catch (Exception ex) {
       System.err.println("CentralServer Exception while creating client: " + ex.toString());
