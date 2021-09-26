@@ -6,6 +6,9 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
+import java.io.File;
+import java.io.FileInputStream;
+
 import com.lib.interfaces.RMIClientInterface;
 
 public class PeerClient extends UnicastRemoteObject implements RMIClientInterface {
@@ -27,8 +30,23 @@ public class PeerClient extends UnicastRemoteObject implements RMIClientInterfac
   }
 
   @Override
-  public int retrieve(String filename) throws RemoteException {
+  public FileInfo retrieve(String filename) throws RemoteException {
     System.out.println("Client " + id + " Retrieve is called.");
-    return id;
+
+    FileInfo ret = new FileInfo();
+    ret.filename = filename;
+    ret.data = new byte[1024*1024];
+    ret.len = 0;
+
+    try {
+      File f1 = new File(filename);
+      FileInputStream in = new FileInputStream(f1);
+      ret.len = in.read(ret.data);
+    }
+    catch(Exception e){
+      e.printStackTrace();
+    }
+
+    return ret;
   }
 }

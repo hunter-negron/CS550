@@ -2,9 +2,11 @@ package com.app.client;
 
 import java.util.*;
 import java.rmi.Naming;
+import java.io.File;
+import java.io.FileOutputStream;
 
 import com.lib.interfaces.*;
-import com.lib.peer_client.PeerClient;
+import com.lib.peer_client.*;
 
 // public int register(String ip, String lookupString, Vector<String> filenames)
 
@@ -31,8 +33,19 @@ public class Client {
     try{
       System.out.println("Retrieving file \"" + filename + "\" from peer " + peerId);
       RMIClientInterface peer = (RMIClientInterface) Naming.lookup(rmiStr + peerId);
-      int val = peer.retrieve(filename);
-      System.out.println("VAL: " + val);
+      FileInfo fileinfo = peer.retrieve(filename);
+      try {
+      	File f = new File(fileinfo.filename);
+      	f.createNewFile();
+      	FileOutputStream out = new FileOutputStream(f,true);
+      	out.write(fileinfo.data,0,fileinfo.len);
+      	out.flush();
+      	out.close();
+      	System.out.println("Done writing data...");
+      }
+      catch(Exception e){
+      	e.printStackTrace();
+      }
     }
     catch (Exception ex) {
       System.err.println("Client Exception while CONNECTING to peer client: " + ex.toString());
