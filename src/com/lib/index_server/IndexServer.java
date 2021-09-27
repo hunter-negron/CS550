@@ -11,7 +11,6 @@ import com.lib.interfaces.RMIServerInterface;
 public class IndexServer extends UnicastRemoteObject implements RMIServerInterface {
   static int peerId;
 
-  private Vector<RegisteredPeerInfo> rpiList;
   private HashMap<String, ArrayList<Integer>> fileIndex; // to search for peer ids for a particular file
   private HashMap<Integer, RegisteredPeerInfo> rpiIndex; // to search for peer info from peer ids
 
@@ -19,7 +18,6 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     super();
 
     peerId = 0; // setting the initital count as 0
-    rpiList = new Vector<RegisteredPeerInfo>();
     fileIndex = new HashMap<String, ArrayList<Integer>>();
     rpiIndex = new HashMap<Integer, RegisteredPeerInfo>();
 
@@ -43,7 +41,6 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     rpi.peerId = peerId++;
     rpi.filenames = filenames;
 
-    rpiList.add(rpi);
     rpiIndex.put(rpi.peerId, rpi);
 
     for(String f : filenames) {
@@ -71,8 +68,10 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
   }
 
   @Override
-  public int deregister(int peerId) throws RemoteException {
+  public int deregister(int peerId, String filename) throws RemoteException {
     System.out.println("deregister called!");
+    fileIndex.get(filename).remove(peerId);
+    rpiIndex.get(peerId).filenames.remove(filename);
     return 0;
   }
 }
