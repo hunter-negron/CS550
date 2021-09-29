@@ -27,14 +27,14 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
       Naming.rebind(rmiInterfaceString, this);
     }
     catch (Exception ex) {
-      System.err.println("IndexServer Exception while binding RMI Interface: " + ex.toString());
+      System.err.println("EXCEPTION: IndexServer Exception while binding RMI Interface: " + ex.toString());
       ex.printStackTrace();
     }
   }
 
   @Override
   public int register(String lookupString, Vector<String> filenames) throws RemoteException {
-    System.out.println("register called!");
+    System.out.println("Register called: lookupString = " + lookupString);
 
     // add the peer info to the index
     RegisteredPeerInfo rpi = new RegisteredPeerInfo();
@@ -44,7 +44,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     rpiIndex.put(rpi.peerId, rpi);
 
     for(String f : filenames) {
-      System.out.println("registering peer " + rpi.peerId + " file \"" + f + "\"");
+      System.out.println("Register file: peer = " + rpi.peerId + " file = \"" + f + "\"");
 
       // check if the file is new in the index
       if(!fileIndex.containsKey(f)) {
@@ -62,13 +62,13 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
 
   @Override
   public ArrayList<Integer> search(String filename) throws RemoteException {
-    System.out.println("search called!");
+    System.out.println("Search called: filename = " + filename);
     return fileIndex.get(filename); // returns list of peers
   }
 
   @Override
   public int deregister(int peerId, String filename) throws RemoteException {
-    System.out.println("deregister called!");
+    System.out.println("Deregister called: peer = " + peerId + ", filename = " + filename);
     fileIndex.get(filename).remove(peerId);
     rpiIndex.get(peerId).filenames.remove(filename);
     return 0;

@@ -18,22 +18,21 @@ public class PeerClient extends UnicastRemoteObject implements RMIClientInterfac
   public PeerClient(String rmiInterfaceString, int peerId, String directory) throws RemoteException {
     id = peerId;
     dir = directory;
-    System.out.println("Peer client " + id + " created.");
 
     try{
-      System.out.println("Binding Client RMI Interface to " + rmiInterfaceString + id);
+      System.out.println("Binding Client " + id + " RMI Interface to " + rmiInterfaceString + id);
       // Binding to the RMI Interface
       Naming.rebind(rmiInterfaceString + id, this);
     }
     catch (Exception ex) {
-      System.err.println("PeerClient Exception while binding RMI Interface: " + ex.toString());
+      System.err.println("EXCEPTION: PeerClient Exception while binding RMI Interface: " + ex.toString());
       ex.printStackTrace();
     }
   }
 
   @Override
   public FileInfo retrieve(String filename) throws RemoteException {
-    System.out.println("Client " + id + " Retrieve is called.");
+    System.out.println("Client " + id + " retrieve called: filename = " + filename);
 
     // All the info the client needs to know to save the file
     FileInfo ret = new FileInfo();

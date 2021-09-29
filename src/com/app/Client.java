@@ -23,7 +23,7 @@ public class Client {
   }
 
   public static void PrintClientOptions(){
-    System.out.println("Enter the file name you would like to search.");
+    PrintMessageLn("Enter the file name you would like to search.");
   }
 
   public static Vector<String> ReadSharedDirectory(File folder){
@@ -41,7 +41,7 @@ public class Client {
 
   public static void retrieveFile(String filename, int peerId) {
     try{
-      System.out.println("Retrieving file \"" + filename + "\" from peer " + peerId);
+      PrintMessageLn("Retrieving file \"" + filename + "\" from peer " + peerId);
       // Connect to peer
       RMIClientInterface peer = (RMIClientInterface) Naming.lookup(rmiStr + peerId);
 
@@ -56,14 +56,14 @@ public class Client {
       	out.write(fileinfo.data,0,fileinfo.len);
       	out.flush();
       	out.close();
-      	System.out.println("Done writing data...");
+      	PrintMessageLn("Done writing data...");
       }
       catch(Exception e){
       	e.printStackTrace();
       }
     }
     catch (Exception ex) {
-      System.err.println("Client Exception while CONNECTING to peer client: " + ex.toString());
+      System.err.println("EXCEPTION: Client Exception while CONNECTING to peer client: " + ex.toString());
       ex.printStackTrace();
     }
   }
@@ -74,13 +74,13 @@ public class Client {
       centralServer = (RMIServerInterface)Naming.lookup(rmiServerStr);
     }
     catch (Exception ex) {
-      System.err.println("Client Exception while CONNECTING to central sever: " + ex.toString());
+      System.err.println("EXCEPTION: Client Exception while CONNECTING to central sever: " + ex.toString());
       ex.printStackTrace();
     }
 
     // Read the files using ReadSharedDirectory() and put it into the vector here!
     if(args.length != 1) {
-      System.out.println("Please specify one directory.");
+      System.err.println("ERROR: Please specify one directory.");
       System.exit(0);
     }
 
@@ -89,7 +89,7 @@ public class Client {
     File folder = new File(dir);
 
     if(!folder.isDirectory() || !folder.exists()) {
-      System.out.println("The folder you entered \"" + dir + "\" is not a valid directory.");
+      System.err.println("ERROR: The folder you entered \"" + dir + "\" is not a valid directory.");
       System.exit(0);
     }
 
@@ -99,10 +99,9 @@ public class Client {
     try{
       // Register and receive peer ID
       myPeerId = centralServer.register(rmiStr, files);
-      System.out.println("Your peer id is : " + myPeerId);
     }
     catch (Exception ex) {
-      System.err.println("Client Exception while REGISTERING to central sever: " + ex.toString());
+      System.err.println("EXCEPTION: Client Exception while REGISTERING to central sever: " + ex.toString());
       ex.printStackTrace();
     }
 
@@ -111,7 +110,7 @@ public class Client {
       PeerClient pc = new PeerClient(rmiStr, myPeerId, dir); // need to get these strings dynamically
     }
     catch (Exception ex) {
-      System.err.println("Client Exception while creating peer client: " + ex.toString());
+      System.err.println("EXCEPTION: Client Exception while creating peer client: " + ex.toString());
       ex.printStackTrace();
     }
 
@@ -131,7 +130,7 @@ public class Client {
           ArrayList<Integer> clientList = centralServer.search(strInput);
 
           if(clientList == null || clientList.size() == 0){
-            PrintMessageLn("OOPS! None of the clients have file " + strInput);
+            System.err.println("ERROR: OOPS! None of the clients have file " + strInput);
             continue;
           }
 
@@ -145,10 +144,10 @@ public class Client {
           PrintMessageLn("Client list end");
 
           // prompt user to select a peer
-          System.out.println("Select a client from which to retrieve the file.");
+          PrintMessageLn("Select a client from which to retrieve the file.");
           int clientSelect = Integer.parseInt(sc.nextLine());
           if(!clientList.contains(clientSelect)) {
-            System.out.println("Invalid client selection.");
+            System.err.println("ERROR: Invalid client selection.");
             continue;
           }
 
@@ -156,12 +155,12 @@ public class Client {
           retrieveFile(strInput, clientSelect);
         }
         catch (Exception ex) {
-          System.err.println("Client Exception while SEARCHING to central sever: " + ex.toString());
+          System.err.println("EXCEPTION: Client Exception while SEARCHING to central sever: " + ex.toString());
           ex.printStackTrace();
         }
       }
       else{
-        PrintMessageLn("Empty string received in the input!");
+        System.err.println("ERROR: Empty string received in the input!");
       }
     }
   }
