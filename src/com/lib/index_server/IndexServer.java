@@ -35,12 +35,12 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
   @Override
   public int register(String lookupString, Vector<String> filenames) throws RemoteException {
     System.out.println("register called!");
-    RegisteredPeerInfo rpi = new RegisteredPeerInfo();
 
+    // add the peer info to the index
+    RegisteredPeerInfo rpi = new RegisteredPeerInfo();
     rpi.lookupString = lookupString;
     rpi.peerId = peerId++;
     rpi.filenames = filenames;
-
     rpiIndex.put(rpi.peerId, rpi);
 
     for(String f : filenames) {
@@ -63,8 +63,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
   @Override
   public ArrayList<Integer> search(String filename) throws RemoteException {
     System.out.println("search called!");
-    return fileIndex.get(filename);
-    // return 0;
+    return fileIndex.get(filename); // returns list of peers
   }
 
   @Override

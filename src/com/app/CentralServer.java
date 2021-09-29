@@ -18,6 +18,7 @@ public class CentralServer {
     }
 
     try{
+      // Register with itself as any other peer, right now just use current directory
       String rmiPeerStr = "//localhost/MyServer";
       RMIServerInterface centralServer = (RMIServerInterface)Naming.lookup("//localhost/central_server");
       int myPeerId = centralServer.register(rmiPeerStr, new Vector<String>());

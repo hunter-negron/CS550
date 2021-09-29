@@ -35,12 +35,14 @@ public class PeerClient extends UnicastRemoteObject implements RMIClientInterfac
   public FileInfo retrieve(String filename) throws RemoteException {
     System.out.println("Client " + id + " Retrieve is called.");
 
+    // All the info the client needs to know to save the file
     FileInfo ret = new FileInfo();
     ret.filename = filename;
-    ret.data = new byte[1024*1024];
+    ret.data = new byte[1024*1024]; // MAX FILE SIZE 1024x1024
     ret.len = 0;
 
     try {
+      // Read file
       File f1 = new File(dir, filename);
       FileInputStream in = new FileInputStream(f1);
       ret.len = in.read(ret.data);

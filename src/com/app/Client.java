@@ -42,9 +42,14 @@ public class Client {
   public static void retrieveFile(String filename, int peerId) {
     try{
       System.out.println("Retrieving file \"" + filename + "\" from peer " + peerId);
+      // Connect to peer
       RMIClientInterface peer = (RMIClientInterface) Naming.lookup(rmiStr + peerId);
+
+      // Get file
       FileInfo fileinfo = peer.retrieve(filename);
+
       try {
+        // Save file
       	File f = new File(dir, fileinfo.filename);
       	f.createNewFile();
       	FileOutputStream out = new FileOutputStream(f,true);
@@ -65,6 +70,7 @@ public class Client {
 
   public static void main(String[] args) {
     try{
+      // connect to index server
       centralServer = (RMIServerInterface)Naming.lookup(rmiServerStr);
     }
     catch (Exception ex) {
@@ -78,6 +84,7 @@ public class Client {
       System.exit(0);
     }
 
+    // The one and only command line arg is the working directory
     dir = args[0];
     File folder = new File(dir);
 
@@ -86,9 +93,11 @@ public class Client {
       System.exit(0);
     }
 
+    // Get all non-directory files with file size less than MAX FILE SIZE. see retrieve().
     Vector<String> files = ReadSharedDirectory(folder);
 
     try{
+      // Register and receive peer ID
       myPeerId = centralServer.register(rmiStr, files);
       System.out.println("Your peer id is : " + myPeerId);
     }
@@ -98,23 +107,27 @@ public class Client {
     }
 
     try{
-      PeerClient pc = new PeerClient(rmiStr, myPeerId, args[0]); // need to get these strings dynamically
+      // Create client
+      PeerClient pc = new PeerClient(rmiStr, myPeerId, dir); // need to get these strings dynamically
     }
     catch (Exception ex) {
       System.err.println("Client Exception while creating peer client: " + ex.toString());
       ex.printStackTrace();
     }
 
+    // User interface
     Scanner sc = new Scanner(System.in);
     String strInput;
 
     PrintMessageLn("Hello Client.");
     while(true){
+      // initial prompt
       PrintClientOptions();
       strInput = sc.nextLine();
 
       if(strInput.length() != 0){
         try{
+          // Get list of peer IDs who have desired file
           ArrayList<Integer> clientList = centralServer.search(strInput);
 
           if(clientList == null || clientList.size() == 0){
@@ -131,6 +144,7 @@ public class Client {
           System.out.println();
           PrintMessageLn("Client list end");
 
+          // prompt user to select a peer
           System.out.println("Select a client from which to retrieve the file.");
           int clientSelect = Integer.parseInt(sc.nextLine());
           if(!clientList.contains(clientSelect)) {
@@ -138,6 +152,7 @@ public class Client {
             continue;
           }
 
+          // retrieve and save file
           retrieveFile(strInput, clientSelect);
         }
         catch (Exception ex) {
