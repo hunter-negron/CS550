@@ -8,6 +8,7 @@ import java.rmi.server.UnicastRemoteObject;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.file.*;
 
 import com.lib.interfaces.RMIClientInterface;
 
@@ -27,6 +28,16 @@ public class PeerClient extends UnicastRemoteObject implements RMIClientInterfac
     catch (Exception ex) {
       System.err.println("EXCEPTION: PeerClient Exception while binding RMI Interface: " + ex.toString());
       ex.printStackTrace();
+    }
+
+    // Run this on its own thread
+    try {
+      // register directory and process its events
+      Path path = Paths.get(dir);
+      //new WatchDir(path, false, id, "").processEvents();
+    }
+    catch(Exception e) {
+      e.printStackTrace();
     }
   }
 

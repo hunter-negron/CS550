@@ -69,7 +69,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
   @Override
   public int deregister(int peerId, String filename) throws RemoteException {
     System.out.println("Deregister called: peer = " + peerId + ", filename = " + filename);
-    fileIndex.get(filename).remove(peerId);
+    fileIndex.get(filename).remove(fileIndex.get(filename).indexOf(peerId));
     rpiIndex.get(peerId).filenames.remove(filename);
     return 0;
   }
