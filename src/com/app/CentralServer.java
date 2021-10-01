@@ -8,10 +8,11 @@ import com.lib.index_server.IndexServer;
 import com.lib.peer_client.PeerClient;
 
 public class CentralServer {
-  final static String rmiServerStr = "//localhost/central_server";
+  final static String rmiServerStr = "//localhost/central_server"; // hardcoded for now
 
   public static void main(String[] args) {
-    try{
+    try {
+      // create index server
       RMIServerInterface is = new IndexServer(rmiServerStr);
     }
     catch (Exception ex) {
@@ -21,10 +22,8 @@ public class CentralServer {
 
     try{
       // Register with itself as any other peer, right now just use current directory
-      String rmiPeerStr = "//localhost/peer";
-      RMIServerInterface centralServer = (RMIServerInterface)Naming.lookup(rmiServerStr);
-      int myPeerId = centralServer.register(rmiPeerStr, new Vector<String>());
-      PeerClient pc = new PeerClient(rmiPeerStr, myPeerId, ".");
+      String hostname = "localhost";
+      PeerClient pc = new PeerClient(hostname, ".");
     }
     catch (Exception ex) {
       System.err.println("EXCEPTION: CentralServer Exception while creating client: " + ex.toString());

@@ -21,9 +21,9 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     fileIndex = new HashMap<String, ArrayList<Integer>>();
     rpiIndex = new HashMap<Integer, RegisteredPeerInfo>();
 
-    try{
-      System.out.println("Binding Server RMI Interface to " + rmiInterfaceString);
+    try {
       // Binding to the RMI Interface
+      System.out.println("Binding Server RMI Interface to " + rmiInterfaceString);
       Naming.rebind(rmiInterfaceString, this);
     }
     catch (Exception ex) {
@@ -43,6 +43,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     rpi.filenames = filenames;
     rpiIndex.put(rpi.peerId, rpi);
 
+    // add all the files to the index
     for(String f : filenames) {
       System.out.println("Register file: peer = " + rpi.peerId + " file = \"" + f + "\"");
 
@@ -57,18 +58,23 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
       }
     }
 
+    // peer uses the id to bind to a unique url
     return rpi.peerId;
   }
 
   @Override
   public ArrayList<Integer> search(String filename) throws RemoteException {
     System.out.println("Search called: filename = " + filename);
-    return fileIndex.get(filename); // returns list of peers
+
+    // returns list of peers
+    return fileIndex.get(filename);
   }
 
   @Override
   public int deregister(int peerId, String filename) throws RemoteException {
     System.out.println("Deregister called: peer = " + peerId + ", filename = " + filename);
+
+    // remove file reference from both indexes
     fileIndex.get(filename).remove(fileIndex.get(filename).indexOf(peerId));
     rpiIndex.get(peerId).filenames.remove(filename);
     return 0;
