@@ -85,7 +85,6 @@ public class Client {
           }
 
           System.out.println("[####################] 100% : Download '" + filename + "'' complete!");
-          System.out.println("Press ENTER to continue.");
           return;
         }
       });
@@ -177,14 +176,7 @@ public class Client {
       if(strInput.length() != 0){
         if(strInput.equals("q")){
           PrintMessageLn("Quitting.");
-          try{
-            centralServer.deregister(peerIdStr, sharedFiles);
-          }
-          catch (Exception ex) {
-            System.err.println("EXCEPTION: Client Exception while DE-REGISTERING files: " + ex.toString());
-            ex.printStackTrace();
-          }
-          System.exit(0);
+          System.exit(0); // This will trigger the shutdown hook so files will be regregistered.
         }
 
         try{
