@@ -184,8 +184,13 @@ public class Client {
           PrintMessageLn("Following clients have '"+ strInput +"' :\n" + cliList);
 
           // prompt user to select a peer
-          PrintMessageLn("Enter a client number (Download will proceed in background):");
-          int selectedClient = Integer.parseInt(sc.nextLine());
+          PrintMessageLn("Enter a client number (Download will proceed in background) \"b\" to go back:");
+          int selectedClient;
+          try {
+            selectedClient = Integer.parseInt(sc.nextLine());
+          } catch(Exception e) {
+            continue;
+          }
 
 
           if(selectedClient == myPeerId){ // Check if the selected this client
