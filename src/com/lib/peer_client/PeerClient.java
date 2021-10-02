@@ -53,13 +53,9 @@ public class PeerClient extends UnicastRemoteObject implements RMIClientInterfac
 
     try {
       // Read file
-      System.out.println("1");
       File f1 = new File(dir, filename);
-      System.out.println("2");
       FileInputStream in = new FileInputStream(f1);
-      System.out.println("3");
       ret.len = in.read(ret.data);
-      System.out.println("4");
     }
     catch(Exception e){
       e.printStackTrace();

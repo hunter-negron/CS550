@@ -46,6 +46,7 @@ public class Client {
 
     for(File f : folder.listFiles()) {
       if(!f.isDirectory() && f.length() <= 1024*1024) {
+        System.out.println("Sharing: " + f.getName());
         filenames.add(f.getName());
       }
     }
@@ -54,7 +55,7 @@ public class Client {
   }
 
   public static void retrieveFile(final String filename, final int peerId, final RMIClientInterface peer) {
-    PrintMessageLn("Retrieving file \"" + filename + "\" from peer '" + peerId + "'. You'll be notified when it finishes");
+    PrintMessageLn("Retrieving file \"" + filename + "\" from peer '" + peerId + "'. You'll be notified when it finishes.");
 
     try{
       Thread t_retrieve = new Thread(new Runnable() {
@@ -133,8 +134,7 @@ public class Client {
             try{
               // If any change is detected, the peer needs to read the directory again
               System.out.println("Change detected in the shared directory.");
-              ReadSharedDirectory(dir);
-              centralServer.register(rmiStr, files, peerIdStr);
+              centralServer.register(rmiStr, ReadSharedDirectory(dir), peerIdStr);
             }
             catch (Exception ex) {
               System.err.println("EXCEPTION: Client Exception while REREGISTERING files: " + ex.toString());

@@ -47,9 +47,11 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
       while (it.hasNext()){
         HashMap.Entry<Integer, RegisteredPeerInfo> m = (Map.Entry<Integer, RegisteredPeerInfo>)it.next();
         rpi = m.getValue();
-        System.out.println("Updating file list for peer " + rpi.peerId + ".");
-        rpi.filenames = filenames;
-        updateFileList(filenames, rpi);
+        if(rpi.peerIdStr.equals(identifier)){
+          System.out.println("Updating file list for peer " + rpi.peerId + ".");
+          rpi.filenames = filenames;
+          updateFileList(filenames, rpi);
+        }
       }
 
       return (rpi != null ? rpi.peerIdStr : null);
