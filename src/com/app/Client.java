@@ -29,7 +29,7 @@ public class Client {
   }
 
   public static void PrintClientOptions(){
-    PrintMessageLn("Enter the file name you would like to search.");
+    PrintMessageLn("Enter the file name you would like to search. (type \"q\" to quit.)");
   }
 
   public static Vector<String> ReadSharedDirectory(String dir){
@@ -53,28 +53,41 @@ public class Client {
     return filenames;
   }
 
-  public static void retrieveFile(String filename, int peerId) {
+  public static void retrieveFile(final String filename, final int peerId, final RMIClientInterface peer) {
+    PrintMessageLn("Retrieving file \"" + filename + "\" from peer '" + peerId + "'. You'll be notified when it finishes");
+
     try{
-      PrintMessageLn("Retrieving file \"" + filename + "\" from peer " + peerId);
-      // Connect to peer
-      RMIClientInterface peer = (RMIClientInterface) Naming.lookup(rmiStr + peerId);
+      Thread t_retrieve = new Thread(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            // Get file
+            FileInfo fileinfo = peer.retrieve(filename, peerId);
 
-      // Get file
-      FileInfo fileinfo = peer.retrieve(filename);
+            // Save file
+            File f = new File(dir, fileinfo.filename);
+            f.createNewFile();
+            FileOutputStream out = new FileOutputStream(f,true);
 
-      try {
-        // Save file
-      	File f = new File(dir, fileinfo.filename);
-      	f.createNewFile();
-      	FileOutputStream out = new FileOutputStream(f,true);
-      	out.write(fileinfo.data,0,fileinfo.len);
-      	out.flush();
-      	out.close();
-      	PrintMessageLn("Done writing data...");
-      }
-      catch(Exception e){
-      	e.printStackTrace();
-      }
+            if(fileinfo.len > 0)
+              out.write(fileinfo.data, 0, fileinfo.len);
+            else
+              out.write(fileinfo.data, 0, 0);
+
+            out.flush();
+            out.close();
+            // PrintMessageLn("Done writing data...");
+          }
+          catch(Exception e){
+            e.printStackTrace();
+          }
+
+          System.out.println("########## 100% :Retrieving '" + filename + "'' complete!");
+          System.out.println("Press ENTER to continue.");
+          return;
+        }
+      });
+      t_retrieve.start();
     }
     catch (Exception ex) {
       System.err.println("EXCEPTION: Client Exception while CONNECTING to peer client: " + ex.toString());
@@ -101,7 +114,8 @@ public class Client {
       System.out.println("My peer identifier is " + peerIdStr);
 
       // need to get these strings dynamically
-      PeerClient pc = new PeerClient(rmiStr, Integer.parseInt(peerIdStr.split("_")[1]), dir);
+      myPeerId = Integer.parseInt(peerIdStr.split("_")[1]);
+      PeerClient pc = new PeerClient(rmiStr, myPeerId, dir);
     }
     catch (Exception ex) {
       System.err.println("EXCEPTION: Client Exception while CONNECTING to central sever: " + ex.toString());
@@ -118,7 +132,7 @@ public class Client {
           public Void call() {
             try{
               // If any change is detected, the peer needs to read the directory again
-              System.out.println("Chang detected in the shared directory.");
+              System.out.println("Change detected in the shared directory.");
               ReadSharedDirectory(dir);
               centralServer.register(rmiStr, files, peerIdStr);
             }
@@ -145,6 +159,11 @@ public class Client {
       strInput = sc.nextLine();
 
       if(strInput.length() != 0){
+        if(strInput.equals("q")){
+          PrintMessageLn("Quitting.");
+          System.exit(0);
+        }
+
         try{
           // Get list of peer IDs who have desired file
           ArrayList<Integer> clientList = centralServer.search(strInput);
@@ -154,25 +173,36 @@ public class Client {
             continue;
           }
 
-          PrintMessageLn("Client list start");
+          // PrintMessageLn("Client list start");
+          String cliList = "";
           for(int i = 0; i < clientList.size(); i++){
-            System.out.print(clientList.get(i));
+            // System.out.print(clientList.get(i));
+            cliList += "Peer " + clientList.get(i);
             if(i < clientList.size() - 1)
-              System.out.print(",");
+              cliList += "\n";
           }
-          System.out.println();
-          PrintMessageLn("Client list end");
+          PrintMessageLn("Following clients have '"+ strInput +"' :\n" + cliList);
 
           // prompt user to select a peer
-          PrintMessageLn("Select a client from which to retrieve the file.");
-          int clientSelect = Integer.parseInt(sc.nextLine());
-          if(!clientList.contains(clientSelect)) {
+          PrintMessageLn("Enter a client number (Download will proceed in background):");
+          int selectedClient = Integer.parseInt(sc.nextLine());
+
+
+          if(selectedClient == myPeerId){ // Check if the selected this client
+            System.err.println("ERROR: File already exists.");
+          }
+          else if(!clientList.contains(selectedClient)) {
             System.err.println("ERROR: Invalid client selection.");
             continue;
           }
 
-          // retrieve and save file
-          retrieveFile(strInput, clientSelect);
+          try{
+            RMIClientInterface peer = (RMIClientInterface) Naming.lookup(rmiStr + selectedClient);
+            retrieveFile(strInput, selectedClient, peer);
+          }
+          catch(Exception e){
+            e.printStackTrace();
+          }
         }
         catch (Exception ex) {
           System.err.println("EXCEPTION: Client Exception while SEARCHING to central sever: " + ex.toString());
@@ -183,5 +213,9 @@ public class Client {
         System.err.println("ERROR: Empty string received in the input!");
       }
     }
+  }
+
+  protected void finalize() {
+    System.out.println("Shutting down Client");
   }
 }
