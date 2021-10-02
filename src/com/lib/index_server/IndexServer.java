@@ -1,6 +1,7 @@
 package com.lib.index_server;
 
 import java.util.*;
+import java.util.Map.Entry;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -11,8 +12,11 @@ import com.lib.interfaces.RMIServerInterface;
 public class IndexServer extends UnicastRemoteObject implements RMIServerInterface {
   static int peerId;
 
-  private HashMap<String, ArrayList<Integer>> fileIndex; // to search for peer ids for a particular file
-  private HashMap<Integer, RegisteredPeerInfo> rpiIndex; // to search for peer info from peer ids
+  private Map<String, ArrayList<Integer>> fileIndex; // to search for peer ids for a particular file
+  private Map<Integer, RegisteredPeerInfo> rpiIndex; // to search for peer info from peer ids
+
+  private final int RANDOM_UPPER_BOUND = 9999999;
+  private Random rand = new Random(); // generate randon numbers to assign to each client.
 
   public IndexServer(String rmiInterfaceString) throws RemoteException {
     super();
@@ -33,31 +37,51 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
   }
 
   @Override
-  public int register(String lookupString, Vector<String> filenames) throws RemoteException {
+  public String register(String lookupString, Vector<String> filenames, String identifier) throws RemoteException {
     System.out.println("Register called: lookupString = " + lookupString);
+    RegisteredPeerInfo rpi = null;
 
-    // add the peer info to the index
-    RegisteredPeerInfo rpi = new RegisteredPeerInfo();
-    rpi.lookupString = lookupString;
-    rpi.peerId = peerId++;
-    rpi.filenames = filenames;
-    rpiIndex.put(rpi.peerId, rpi);
+    if(identifier != null){
+      Iterator<Entry<Integer, RegisteredPeerInfo>> it = rpiIndex.entrySet().iterator();
 
-    for(String f : filenames) {
-      System.out.println("Register file: peer = " + rpi.peerId + " file = \"" + f + "\"");
-
-      // check if the file is new in the index
-      if(!fileIndex.containsKey(f)) {
-        fileIndex.put(f, new ArrayList<Integer>());
+      while (it.hasNext()){
+        HashMap.Entry<Integer, RegisteredPeerInfo> m = (Map.Entry<Integer, RegisteredPeerInfo>)it.next();
+        rpi = m.getValue();
+        System.out.println("Updating file list for peer " + rpi.peerId + ".");
+        rpi.filenames = filenames;
+        updateFileList(filenames, rpi);
       }
 
-      // check if the peerId is already present for that particular file.
-      if(!fileIndex.get(f).contains(rpi.peerId)){
-        fileIndex.get(f).add(rpi.peerId);
-      }
+      return (rpi != null ? rpi.peerIdStr : null);
     }
 
-    return rpi.peerId;
+    // add the peer info to the index
+    rpi = new RegisteredPeerInfo();
+
+    rpi.lookupString = lookupString;
+    rpi.peerIdStr = Integer.toString(rand.nextInt(RANDOM_UPPER_BOUND)) + "_" + Integer.toString(peerId);
+    rpi.peerId = peerId;
+    peerId++;
+    rpi.filenames = filenames;
+
+    rpiIndex.put(rpi.peerId, rpi);
+    updateFileList(filenames, rpi);
+
+    // for(String f : filenames) {
+    //   System.out.println("Register file: peer = " + rpi.peerId + " file = \"" + f + "\"");
+
+    //   // check if the file is new in the index
+    //   if(!fileIndex.containsKey(f)) {
+    //     fileIndex.put(f, new ArrayList<Integer>());
+    //   }
+
+    //   // check if the peerId is already present for that particular file.
+    //   if(!fileIndex.get(f).contains(rpi.peerId)){
+    //     fileIndex.get(f).add(rpi.peerId);
+    //   }
+    // }
+
+    return rpi.peerIdStr;
   }
 
   @Override
@@ -72,5 +96,21 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     fileIndex.get(filename).remove(fileIndex.get(filename).indexOf(peerId));
     rpiIndex.get(peerId).filenames.remove(filename);
     return 0;
+  }
+
+  private void updateFileList(Vector<String> filenames, RegisteredPeerInfo rpi){
+    for(String f : filenames) {
+      System.out.println("Register file: peer = " + rpi.peerId + " file = \"" + f + "\"");
+
+      // check if the file is new in the index
+      if(!fileIndex.containsKey(f)) {
+        fileIndex.put(f, new ArrayList<Integer>());
+      }
+
+      // check if the peerId is already present for that particular file.
+      if(!fileIndex.get(f).contains(rpi.peerId)){
+        fileIndex.get(f).add(rpi.peerId);
+      }
+    }
   }
 }

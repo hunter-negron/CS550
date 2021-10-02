@@ -23,8 +23,8 @@ public class CentralServer {
       // Register with itself as any other peer, right now just use current directory
       String rmiPeerStr = "//localhost/peer";
       RMIServerInterface centralServer = (RMIServerInterface)Naming.lookup(rmiServerStr);
-      int myPeerId = centralServer.register(rmiPeerStr, new Vector<String>());
-      PeerClient pc = new PeerClient(rmiPeerStr, myPeerId, ".");
+      // String myPeerIdStr = centralServer.register(rmiPeerStr, new Vector<String>());
+      // PeerClient pc = new PeerClient(rmiPeerStr, myPeerId, ".");
     }
     catch (Exception ex) {
       System.err.println("EXCEPTION: CentralServer Exception while creating client: " + ex.toString());
