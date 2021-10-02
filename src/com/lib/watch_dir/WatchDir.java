@@ -49,9 +49,9 @@ public class WatchDir {
           }
 
           // Uncomment for testing
-          if(e.kind() == ENTRY_CREATE) {
-            System.out.printf("ENTRY_CREATE " + filename.getFileName());
-          }
+          // if(e.kind() == ENTRY_CREATE) {
+          //   System.out.printf("ENTRY_CREATE " + filename.getFileName());
+          // }
           // else if(e.kind() == ENTRY_DELETE) {
           //   System.out.printf("ENTRY_DELETE " + filename.getFileName());
           // }

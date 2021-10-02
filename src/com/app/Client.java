@@ -23,6 +23,7 @@ public class Client {
   private static int myPeerId;
   private static WatchDir wd;
   private static RMIServerInterface centralServer;
+  private static Vector<String> sharedFiles;
 
   public static void PrintMessageLn(String str){
     System.out.println("PEER(" + myPeerId + "): " + str);
@@ -46,6 +47,7 @@ public class Client {
 
     for(File f : folder.listFiles()) {
       if(!f.isDirectory() && f.length() <= 1024*1024) {
+        System.out.println("Sharing: " + f.getName());
         filenames.add(f.getName());
       }
     }
@@ -54,7 +56,7 @@ public class Client {
   }
 
   public static void retrieveFile(final String filename, final int peerId, final RMIClientInterface peer) {
-    PrintMessageLn("Retrieving file \"" + filename + "\" from peer '" + peerId + "'. You'll be notified when it finishes");
+    PrintMessageLn("Retrieving file \"" + filename + "\" from 'peer " + peerId + "'. You'll be notified when it finishes.");
 
     try{
       Thread t_retrieve = new Thread(new Runnable() {
@@ -82,7 +84,7 @@ public class Client {
             e.printStackTrace();
           }
 
-          System.out.println("########## 100% :Retrieving '" + filename + "'' complete!");
+          System.out.println("[####################] 100% : Download '" + filename + "'' complete!");
           System.out.println("Press ENTER to continue.");
           return;
         }
@@ -106,11 +108,11 @@ public class Client {
     dir = args[0];
 
     // Get all non-directory files with file size less than MAX FILE SIZE. see retrieve().
-    Vector<String> files = ReadSharedDirectory(dir);
+    sharedFiles = ReadSharedDirectory(dir);
 
     try{
       centralServer = (RMIServerInterface)Naming.lookup(rmiServerStr); // connect to index server
-      peerIdStr = centralServer.register(rmiStr, files, null);         // registering the files
+      peerIdStr = centralServer.register(rmiStr, sharedFiles, null);         // registering the files
       System.out.println("My peer identifier is " + peerIdStr);
 
       // need to get these strings dynamically
@@ -133,11 +135,11 @@ public class Client {
             try{
               // If any change is detected, the peer needs to read the directory again
               System.out.println("Change detected in the shared directory.");
-              ReadSharedDirectory(dir);
-              centralServer.register(rmiStr, files, peerIdStr);
+              sharedFiles = ReadSharedDirectory(dir);
+              centralServer.register(rmiStr, sharedFiles, peerIdStr);
             }
             catch (Exception ex) {
-              System.err.println("EXCEPTION: Client Exception while REREGISTERING files: " + ex.toString());
+              System.err.println("EXCEPTION: Client Exception while RE-REGISTERING files: " + ex.toString());
               ex.printStackTrace();
             }
 
@@ -147,6 +149,20 @@ public class Client {
       }
     });
     t_watch.start(); // starting the thread
+
+    Runtime.getRuntime().addShutdownHook(new Thread(){
+      @Override
+      public void run(){
+        System.out.println("Shutting down the client.");
+        try{
+          centralServer.deregister(peerIdStr, sharedFiles);
+        }
+        catch (Exception ex) {
+          System.err.println("EXCEPTION: Client Exception while DE-REGISTERING files during shutdown: " + ex.toString());
+          ex.printStackTrace();
+        }
+      }
+    });
 
     // User interface
     Scanner sc = new Scanner(System.in);
@@ -161,6 +177,13 @@ public class Client {
       if(strInput.length() != 0){
         if(strInput.equals("q")){
           PrintMessageLn("Quitting.");
+          try{
+            centralServer.deregister(peerIdStr, sharedFiles);
+          }
+          catch (Exception ex) {
+            System.err.println("EXCEPTION: Client Exception while DE-REGISTERING files: " + ex.toString());
+            ex.printStackTrace();
+          }
           System.exit(0);
         }
 
@@ -195,6 +218,7 @@ public class Client {
 
           if(selectedClient == myPeerId){ // Check if the selected this client
             System.err.println("ERROR: File already exists.");
+            continue;
           }
           else if(!clientList.contains(selectedClient)) {
             System.err.println("ERROR: Invalid client selection.");
@@ -202,11 +226,15 @@ public class Client {
           }
 
           try{
-            RMIClientInterface peer = (RMIClientInterface) Naming.lookup(rmiStr + selectedClient);
-            retrieveFile(strInput, selectedClient, peer);
+            PrintMessageLn("Connecting to peer " + selectedClient);
+            RMIClientInterface peer = (RMIClientInterface)Naming.lookup(rmiStr + selectedClient);
+            if(peer != null)
+              retrieveFile(strInput, selectedClient, peer);
+            else
+              PrintMessageLn("Unable to connect to peer " + selectedClient + ".");
           }
           catch(Exception e){
-            e.printStackTrace();
+            // e.printStackTrace();
           }
         }
         catch (Exception ex) {
@@ -218,9 +246,5 @@ public class Client {
         System.err.println("ERROR: Empty string received in the input!");
       }
     }
-  }
-
-  protected void finalize() {
-    System.out.println("Shutting down Client");
   }
 }
