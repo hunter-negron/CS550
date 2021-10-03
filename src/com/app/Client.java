@@ -63,8 +63,10 @@ public class Client {
         @Override
         public void run() {
           try {
+            System.out.println("Peer " + peerId + ": Retrieve start time =" + System.currentTimeMillis());
             // Get file
             FileInfo fileinfo = peer.retrieve(filename, peerId);
+            System.out.println("Peer " + peerId + ": Retrieve end time =" + System.currentTimeMillis());
 
             // Save file
             File f = new File(dir, fileinfo.filename);
@@ -169,7 +171,7 @@ public class Client {
 
     PrintMessageLn("Hello Client.");
     while(true){
-      // initial prompt
+      // Initial prompt
       PrintClientOptions();
       strInput = sc.nextLine();
 

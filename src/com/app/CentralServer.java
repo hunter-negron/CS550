@@ -30,6 +30,5 @@ public class CentralServer {
       System.err.println("EXCEPTION: CentralServer Exception while creating client: " + ex.toString());
       ex.printStackTrace();
     }
-
   }
 }
