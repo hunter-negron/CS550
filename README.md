@@ -4,7 +4,7 @@ CS 550 Fall 2021 semester project
 
 To compile the demo. Run the following command.
 
-    javac src/com/rmitest/rmiinterface/RMIInterface.java src/com/rmitest/rmiserver/ServerOperation.java src/com/rmitest/rmiclient/ClientOperation.java
+    ./build.sh
 
 Make sure that you turn on your RMI registry. For most Linux based OS and Mac, following command works.
 
@@ -12,5 +12,26 @@ Make sure that you turn on your RMI registry. For most Linux based OS and Mac, f
 
 Run server and client separately. Enter the `src` file and run the following commands.
 
-    java com.rmitest.rmiserver.ServerOperation # for server
-    java com.rmitest.rmiclient.ClientOperation # for client
+    ./run.sh s                         # for server
+    ./run.sh c [SHARED_DIRECTORY_PATH] # for client
+
+For simplicity, we have pushed a sample shared directory for all 3 peer clients. To start 3 peer clients, run these commands on separate terminals
+
+    ./run.sh c ./peer_shared_directories/0 # for peer client 0
+    ./run.sh c ./peer_shared_directories/1 # for peer client 1
+    ./run.sh c ./peer_shared_directories/2 # for peer client 2
+
+Each directory is named after the peer number and has files of different sizes as specified in the PA1 document.
+In order to generate the default shared directory, run the following script.
+
+    ./createTestEnv.sh 3 # where 3 is the number of peer client directories
+
+# Test cases
+To run test cases, enter test directory 
+
+    cd ./test
+
+and run following commands.
+
+    ./test_parallelRetrieve.sh 3 # where 3 is number of parallel peer clients
+
