@@ -6,11 +6,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.Files;
 import java.util.concurrent.Callable;
 
 import com.lib.watch_dir.WatchDir;
 import com.lib.interfaces.*;
 import com.lib.peer_client.*;
+
+import org.json.*;
 
 // public int register(String ip, String lookupString, Vector<String> filenames)
 
@@ -100,7 +103,7 @@ public class Client {
 
   public static void main(String[] args) {
     // Check if the name to the shared directory is provided
-    if(args.length != 1) {
+    if(args.length != 2) {
       System.err.println("ERROR: Please specify one directory.");
       System.exit(0);
     }
@@ -110,6 +113,18 @@ public class Client {
 
     // Get all non-directory files with file size less than MAX FILE SIZE. see retrieve().
     sharedFiles = ReadSharedDirectory(dir);
+
+    try {
+      Path filePath = Paths.get(args[1]);
+      String rawJson = Files.readString(filePath);
+      JSONObject json = new JSONObject(rawJson);
+      System.out.println(json.getString("topologyType"));
+      System.exit(0);
+    } catch(Exception ex) {
+      System.err.println("EXCEPTION: Client Exception while PARSING json config: " + ex.toString());
+      ex.printStackTrace();
+      System.exit(0);
+    }
 
     try{
       centralServer = (RMIServerInterface)Naming.lookup(rmiServerStr); // connect to index server
