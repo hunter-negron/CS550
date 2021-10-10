@@ -30,6 +30,7 @@ public class Client {
 
   private static String jsonConfig;
   private static int configId; // for using as an index into JSON config ONLY!
+  private static int superpeerId;
 
   public static void PrintMessageLn(String str){
     System.out.println("PEER(" + myPeerId + "): " + str);
@@ -123,14 +124,14 @@ public class Client {
       Path filePath = Paths.get(jsonConfig);
       String rawJson = Files.readString(filePath);
       JSONObject json = new JSONObject(rawJson);
-      System.out.println(json.getString("topologyType"));
+      superpeerId = json.getJSONArray("peers").getInt(configId);
     } catch(Exception ex) {
       System.err.println("EXCEPTION: Client Exception while PARSING json config: " + ex.toString());
       ex.printStackTrace();
     }
 
     try{
-      centralServer = (RMIServerInterface)Naming.lookup(rmiServerStr); // connect to index server
+      centralServer = (RMIServerInterface)Naming.lookup(rmiServerStr + superpeerId); // connect to index server
       peerIdStr = centralServer.register(rmiStr, sharedFiles, null);         // registering the files
       System.out.println("My peer identifier is " + peerIdStr);
 
