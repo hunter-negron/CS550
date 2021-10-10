@@ -1,0 +1,42 @@
+{
+  "topologyType": "all2all",
+
+  /*
+  ** number of superpeers = length of this array = 8
+  ** i = id for superpeer
+  ** element at index i = list of superpeers to which superpeer i should connect
+  */
+  "superpeers": [
+    [1, 2, 3, 4, 5, 6, 7],
+    [0, 2, 3, 4, 5, 6, 7],
+    [0, 1, 3, 4, 5, 6, 7],
+    [0, 1, 2, 4, 5, 6, 7],
+    [0, 1, 2, 3, 5, 6, 7],
+    [0, 1, 2, 3, 4, 6, 7],
+    [0, 1, 2, 3, 4, 5, 7],
+    [0, 1, 2, 3, 4, 5, 6]
+  ],
+
+  /*
+  ** number of peers = length of this array = 17
+  ** j = config id for peer (actual useful id assigned by superpeer will be different; this is just for static configuration)
+  ** element at index j = id of superpeer to which peer with config id j should connect
+  ** each of the eight superpeers will have 1-3 peers connected to it
+  */
+  "peers": [
+    0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7
+  ],
+
+  /*
+  ** size of the historical message buffer
+  ** so a superpeer knows if it has seen/forwarded a query message before
+  ** and knows where to back-propagate a queryhit message
+  */
+  "bufferSize": 64,
+
+  /*
+  ** time to live
+  ** so a message is not forwarded indefinitely
+  */
+  "ttl": 8
+}
