@@ -28,6 +28,9 @@ public class Client {
   private static RMIServerInterface centralServer;
   private static Vector<String> sharedFiles;
 
+  private static String jsonConfig;
+  private static int configId; // for using as an index into JSON config ONLY!
+
   public static void PrintMessageLn(String str){
     System.out.println("PEER(" + myPeerId + "): " + str);
   }
@@ -103,27 +106,27 @@ public class Client {
 
   public static void main(String[] args) {
     // Check if the name to the shared directory is provided
-    if(args.length != 2) {
-      System.err.println("ERROR: Please specify one directory.");
+    if(args.length != 3) {
+      System.err.println("ARGS: [working dir] [json config file] [config id]");
       System.exit(0);
     }
 
-    // The one and only command line arg is the working directory
+    // get the command line args
     dir = args[0];
+    jsonConfig = args[1];
+    configId = Integer.parseInt(args[2]);
 
     // Get all non-directory files with file size less than MAX FILE SIZE. see retrieve().
     sharedFiles = ReadSharedDirectory(dir);
 
     try {
-      Path filePath = Paths.get(args[1]);
+      Path filePath = Paths.get(jsonConfig);
       String rawJson = Files.readString(filePath);
       JSONObject json = new JSONObject(rawJson);
       System.out.println(json.getString("topologyType"));
-      System.exit(0);
     } catch(Exception ex) {
       System.err.println("EXCEPTION: Client Exception while PARSING json config: " + ex.toString());
       ex.printStackTrace();
-      System.exit(0);
     }
 
     try{

@@ -7,12 +7,27 @@ import com.lib.interfaces.RMIServerInterface;
 import com.lib.index_server.IndexServer;
 import com.lib.peer_client.PeerClient;
 
+import org.json.*;
+
 public class CentralServer {
   final static String rmiServerStr = "//localhost/central_server";
+  static String dir;
+  static String jsonConfig;
+  static int id;
 
   public static void main(String[] args) {
+    // Check if the name to the shared directory is provided
+    if(args.length != 3) {
+      System.err.println("ARGS: [working dir] [json config file] [superpeer id]");
+      System.exit(0);
+    }
+
+    dir = args[0];
+    jsonConfig = args[1];
+    id = Integer.parseInt(args[2]);
+
     try{
-      RMIServerInterface is = new IndexServer(rmiServerStr);
+      RMIServerInterface is = new IndexServer(rmiServerStr + id);
     }
     catch (Exception ex) {
       System.err.println("EXCEPTION: CentralServer Exception while creating server: " + ex.toString());
