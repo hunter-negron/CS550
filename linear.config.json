@@ -18,5 +18,5 @@
 
   "bufferSize": 64,
 
-  "ttl": 8
+  "timeToLive": 8
 }

@@ -18,8 +18,14 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
   private final int RANDOM_UPPER_BOUND = 9999999;
   private Random rand = new Random(); // generate randon numbers to assign to each client.
 
-  public IndexServer(String rmiInterfaceString) throws RemoteException {
+  public IndexServer(String rmiInterfaceString, ArrayList<Integer> neighbors, int bufferSize, int timeToLive) throws RemoteException {
     super();
+
+    // If this check is true, then either the config was not properly parsed or code has not yet been implemented to parse the config yet
+    if(bufferSize <= 0 || timeToLive <= 0) {
+      System.err.println("ERROR: IndexServer bufferSize or timeToLive is <= 0.");
+      System.exit(0);
+    }
 
     incomingPeerId = 0; // setting the initital count as 0
     fileIndex = new HashMap<String, ArrayList<Integer>>();

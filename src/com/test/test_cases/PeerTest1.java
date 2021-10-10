@@ -163,7 +163,7 @@ public class PeerTest1 implements Runnable {
       @Override
       public void run() {
         try{
-          RMIServerInterface is = new IndexServer(rmiServerStr);
+          RMIServerInterface is = new IndexServer(rmiServerStr, null, 0, 0);
         }
         catch (Exception ex) {
           System.err.println("EXCEPTION: CentralServer Exception while creating server: " + ex.toString());

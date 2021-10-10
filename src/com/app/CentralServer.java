@@ -3,6 +3,10 @@ package com.app.server;
 import java.util.*;
 import java.rmi.Naming;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+
 import com.lib.interfaces.RMIServerInterface;
 import com.lib.index_server.IndexServer;
 import com.lib.peer_client.PeerClient;
@@ -26,8 +30,28 @@ public class CentralServer {
     jsonConfig = args[1];
     id = Integer.parseInt(args[2]);
 
+    ArrayList<Integer> neighbors = new ArrayList<Integer>();
+    int bufferSize = 0;
+    int timeToLive = 0;
+
+    // parse config
+    try {
+      Path filePath = Paths.get(jsonConfig);
+      String rawJson = Files.readString(filePath);
+      JSONObject json = new JSONObject(rawJson);
+      for(int i = 0; i < json.getJSONArray("superpeers").getJSONArray(id).length(); i++) {
+        neighbors.add(json.getJSONArray("superpeers").getJSONArray(id).getInt(i));
+      }
+      bufferSize = json.getInt("bufferSize");
+      timeToLive = json.getInt("timeToLive");
+
+    } catch(Exception ex) {
+      System.err.println("EXCEPTION: Client Exception while PARSING json config: " + ex.toString());
+      ex.printStackTrace();
+    }
+
     try{
-      RMIServerInterface is = new IndexServer(rmiServerStr + id);
+      RMIServerInterface is = new IndexServer(rmiServerStr + id, neighbors, bufferSize, timeToLive);
     }
     catch (Exception ex) {
       System.err.println("EXCEPTION: CentralServer Exception while creating server: " + ex.toString());

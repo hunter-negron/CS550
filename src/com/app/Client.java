@@ -120,6 +120,7 @@ public class Client {
     // Get all non-directory files with file size less than MAX FILE SIZE. see retrieve().
     sharedFiles = ReadSharedDirectory(dir);
 
+    // parse config
     try {
       Path filePath = Paths.get(jsonConfig);
       String rawJson = Files.readString(filePath);
