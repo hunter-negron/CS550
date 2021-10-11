@@ -10,6 +10,7 @@ import java.rmi.server.UnicastRemoteObject;
 import com.lib.interfaces.RMIServerInterface;
 
 public class IndexServer extends UnicastRemoteObject implements RMIServerInterface {
+  final static String rmiServerStr = "//localhost/central_server";
   static int incomingPeerId;
 
   private Map<String, ArrayList<Integer>> fileIndex; // to search for peer ids for a particular file
@@ -18,7 +19,10 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
   private final int RANDOM_UPPER_BOUND = 9999999;
   private Random rand = new Random(); // generate randon numbers to assign to each client.
 
-  public IndexServer(String rmiInterfaceString, ArrayList<Integer> neighbors, int bufferSize, int timeToLive) throws RemoteException {
+  private ArrayList<RMIServerInterface> neighbors;
+  private int id;
+
+  public IndexServer(int superpeerId, String rmiInterfaceString, ArrayList<Integer> neighborIds, int bufferSize, int timeToLive) throws RemoteException {
     super();
 
     // If this check is true, then either the config was not properly parsed or code has not yet been implemented to parse the config yet
@@ -30,6 +34,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     incomingPeerId = 0; // setting the initital count as 0
     fileIndex = new HashMap<String, ArrayList<Integer>>();
     rpiIndex = new HashMap<Integer, RegisteredPeerInfo>();
+    id = superpeerId;
 
     try{
       System.out.println("Binding Server RMI Interface to " + rmiInterfaceString);
@@ -40,6 +45,42 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
       System.err.println("EXCEPTION: IndexServer Exception while binding RMI Interface: " + ex.toString());
       ex.printStackTrace();
     }
+
+    // connect to superpeer neighbors
+    /*neighbors = new ArrayList<RMIServerInterface>();
+    try {
+      for(int nId : neighborIds) {
+        neighbors.add((RMIServerInterface)Naming.lookup(rmiServerStr + nId));
+        System.out.println("Superpeer " + id + " connecting to superpeer " + nId);
+      }
+    }
+    catch(Exception ex) {
+      System.out.println("EXCEPTION: Superpeer exception while CONNECTING to superpeer neighbor" + ex.toString());
+      ex.printStackTrace();
+    }*/
+
+    // connect and test
+    neighbors = new ArrayList<RMIServerInterface>();
+    int i = 0;
+    RMIServerInterface s;
+    while(true) {
+      if(i >= neighborIds.size()) {
+        break;
+      }
+      try {
+        s = (RMIServerInterface)Naming.lookup(rmiServerStr + neighborIds.get(i));
+        s.testCall();
+        neighbors.add(s);
+        System.out.println("test success superpeer " + neighborIds.get(i++));
+      }
+      catch(Exception e) {
+        System.out.println(e.toString());
+        //e.printStackTrace();
+        try{Thread.sleep(1000);}catch(Exception ex){}
+        continue;
+      }
+    }
+    System.out.println("Done.");
   }
 
   @Override
@@ -140,4 +181,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
       }
     }
   }
+
+  @Override
+  public void testCall() throws RemoteException {}
 }

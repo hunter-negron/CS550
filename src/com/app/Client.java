@@ -133,6 +133,13 @@ public class Client {
 
     try{
       centralServer = (RMIServerInterface)Naming.lookup(rmiServerStr + superpeerId); // connect to index server
+    }
+    catch (Exception ex) {
+      System.err.println("EXCEPTION: Client Exception while CONNECTING to central sever: " + ex.toString());
+      ex.printStackTrace();
+    }
+
+    try {
       peerIdStr = centralServer.register(rmiStr, sharedFiles, null);         // registering the files
       System.out.println("My peer identifier is " + peerIdStr);
 
@@ -141,7 +148,7 @@ public class Client {
       PeerClient pc = new PeerClient(rmiStr, myPeerId, dir);
     }
     catch (Exception ex) {
-      System.err.println("EXCEPTION: Client Exception while CONNECTING to central sever: " + ex.toString());
+      System.err.println("EXCEPTION: Client Exception while REGISTERING with central server: " + ex.toString());
       ex.printStackTrace();
     }
 
