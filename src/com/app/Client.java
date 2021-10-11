@@ -15,10 +15,8 @@ import com.lib.peer_client.*;
 
 import org.json.*;
 
-// public int register(String ip, String lookupString, Vector<String> filenames)
-
 public class Client {
-  final static String rmiStr = "//localhost/peer";
+  final static String rmiStr = "//localhost/peer/";
   final static String rmiServerStr = "//localhost/central_server";
 
   private static String dir;
@@ -145,7 +143,7 @@ public class Client {
 
       // need to get these strings dynamically
       myPeerId = Integer.parseInt(peerIdStr.split("_")[1]);
-      PeerClient pc = new PeerClient(rmiStr, myPeerId, dir);
+      PeerClient pc = new PeerClient(rmiStr + superpeerId + "/", myPeerId, dir);
     }
     catch (Exception ex) {
       System.err.println("EXCEPTION: Client Exception while REGISTERING with central server: " + ex.toString());
@@ -230,6 +228,7 @@ public class Client {
           // prompt user to select a peer
           PrintMessageLn("Enter a client number (Download will proceed in background) \"b\" to go back:");
           int selectedClient;
+          int selectedClientSuperpeerId = -1; // client must now have this info too, to contact peer with proper URL
           try {
             selectedClient = Integer.parseInt(sc.nextLine());
           } catch(Exception e) {
@@ -248,7 +247,7 @@ public class Client {
 
           try{
             PrintMessageLn("Connecting to peer " + selectedClient);
-            RMIClientInterface peer = (RMIClientInterface)Naming.lookup(rmiStr + selectedClient);
+            RMIClientInterface peer = (RMIClientInterface)Naming.lookup(rmiStr + selectedClientSuperpeerId + "/" + selectedClient);
             if(peer != null)
               retrieveFile(strInput, selectedClient, peer);
             else
