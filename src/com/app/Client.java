@@ -222,17 +222,17 @@ public class Client {
           query.filename = strInput;
           QueryHit queryHit = centralServer.forwardQuery(query);
 
-          if(clientList == null || clientList.size() == 0){
+          if(queryHit.peerId == null || queryHit.peerId.size() == 0 || queryHit.peerId.size() != queryHit.superpeerId.size()){
             System.err.println("ERROR: OOPS! None of the clients have file " + strInput);
             continue;
           }
 
           // PrintMessageLn("Client list start");
           String cliList = "";
-          for(int i = 0; i < clientList.size(); i++){
+          for(int i = 0; i < queryHit.peerId.size(); i++){
             // System.out.print(clientList.get(i));
-            cliList += "Peer " + clientList.get(i);
-            if(i < clientList.size() - 1)
+            cliList += "Peer " + queryHit.peerId.get(i) + " at superpeer " + queryHit.superpeerId.get(i);
+            if(i < queryHit.peerId.size() - 1)
               cliList += "\n";
           }
           PrintMessageLn("Following clients have '"+ strInput +"' :\n" + cliList);
@@ -240,9 +240,16 @@ public class Client {
           // prompt user to select a peer
           PrintMessageLn("Enter a client number (Download will proceed in background) \"b\" to go back:");
           int selectedClient;
-          int selectedClientSuperpeerId = -1; // client must now have this info too, to contact peer with proper URL
           try {
             selectedClient = Integer.parseInt(sc.nextLine());
+          } catch(Exception e) {
+            continue;
+          }
+
+          PrintMessageLn("Enter the superpeer number:");
+          int selectedClientSuperpeerId;
+          try {
+            selectedClientSuperpeerId = Integer.parseInt(sc.nextLine());
           } catch(Exception e) {
             continue;
           }
@@ -252,7 +259,7 @@ public class Client {
             System.err.println("ERROR: File already exists.");
             continue;
           }
-          else if(!clientList.contains(selectedClient)) {
+          else if(!queryHit.peerId.contains(selectedClient) || !queryHit.superpeerId.contains(selectedClientSuperpeerId)) {
             System.err.println("ERROR: Invalid client selection.");
             continue;
           }
