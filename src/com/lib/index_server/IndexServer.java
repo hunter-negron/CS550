@@ -19,8 +19,10 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
   private final int RANDOM_UPPER_BOUND = 9999999;
   private Random rand = new Random(); // generate randon numbers to assign to each client.
 
-  private ArrayList<RMIServerInterface> neighbors;
-  private int id;
+  private ArrayList<RMIServerInterface> neighbors; // holds connections to all neighbor superpeers
+  private int id; // this superpeer ID
+  private ArrayList<Query> queryQueue; // queue of query messages received from neighbors
+  private ArrayList<QueryHit> queryHitQueue; // queue of queryhit messages received from neighbors
 
   public IndexServer(int superpeerId, String rmiInterfaceString, ArrayList<Integer> neighborIds, int bufferSize, int timeToLive) throws RemoteException {
     super();
@@ -46,31 +48,20 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
       ex.printStackTrace();
     }
 
-    // connect to superpeer neighbors
-    /*neighbors = new ArrayList<RMIServerInterface>();
-    try {
-      for(int nId : neighborIds) {
-        neighbors.add((RMIServerInterface)Naming.lookup(rmiServerStr + nId));
-        System.out.println("Superpeer " + id + " connecting to superpeer " + nId);
-      }
-    }
-    catch(Exception ex) {
-      System.out.println("EXCEPTION: Superpeer exception while CONNECTING to superpeer neighbor" + ex.toString());
-      ex.printStackTrace();
-    }*/
-
     // connect and test
     neighbors = new ArrayList<RMIServerInterface>();
     int i = 0;
     RMIServerInterface s;
-    while(true) {
+
+    while(true) { // keep trying until all successful
       if(i >= neighborIds.size()) {
         break;
       }
+
       try {
-        s = (RMIServerInterface)Naming.lookup(rmiServerStr + neighborIds.get(i));
-        s.testCall();
-        neighbors.add(s);
+        s = (RMIServerInterface)Naming.lookup(rmiServerStr + neighborIds.get(i)); // get the server
+        s.testCall(); // if this throws an exception, then we know we're not connected, so try again
+        neighbors.add(s); // if we get here, test was successful so we can add it
         System.out.println("test success superpeer " + neighborIds.get(i++));
       }
       catch(Exception e) {
@@ -184,4 +175,9 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
 
   @Override
   public void testCall() throws RemoteException {}
+
+  @Override
+  public QueryHit forwardQuery(Query q) throws RemoteException {
+    return null;
+  }
 }
