@@ -14,6 +14,7 @@ import com.lib.interfaces.*;
 import com.lib.peer_client.*;
 import com.lib.index_server.Query;
 import com.lib.index_server.QueryHit;
+import com.lib.index_server.MessageID;
 
 import org.json.*;
 
@@ -218,8 +219,9 @@ public class Client {
 
         try{
           // Get list of peer IDs who have desired file
-          ArrayList<Integer> clientList = centralServer.search(strInput);
+          //ArrayList<Integer> clientList = centralServer.search(strInput);
           Query query = new Query();
+          query.messageId = new MessageID();
           query.messageId.superpeerId = superpeerId;
           query.messageId.peerId = myPeerId;
           query.messageId.seq = seq++;
@@ -260,7 +262,7 @@ public class Client {
           }
 
 
-          if(selectedClient == myPeerId){ // Check if the selected this client
+          if(selectedClient == myPeerId && selectedClientSuperpeerId == superpeerId){ // Check if the selected this client
             System.err.println("ERROR: File already exists.");
             continue;
           }

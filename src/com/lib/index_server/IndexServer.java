@@ -179,11 +179,16 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
   @Override
   public QueryHit forwardQuery(Query q) throws RemoteException {
     QueryHit qh = new QueryHit();
+    qh.superpeerId = new ArrayList<Integer>();
+    qh.peerId = new ArrayList<Integer>();
 
+    try{
     ArrayList<Integer> result = search(q.filename);
-    for(int p : result) {
-      qh.superpeerId.add(id);
-      qh.peerId.add(p);
+    if(result != null) {
+      for(int p : result) {
+        qh.superpeerId.add(id);
+        qh.peerId.add(p);
+      }
     }
 
     if(q.timeToLive > 0) {
@@ -195,6 +200,8 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
         qh.peerId.addAll(response.peerId);
       }
     }
-    return null;
+  }catch(Exception e) {System.out.println("\n\n"); e.printStackTrace(); System.out.println("\n\n");}
+
+    return qh;
   }
 }

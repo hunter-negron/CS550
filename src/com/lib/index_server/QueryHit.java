@@ -1,8 +1,9 @@
 package com.lib.index_server;
 
 import java.util.*;
+import java.io.Serializable;
 
-public class QueryHit {
+public class QueryHit implements Serializable {
   public MessageID messageId;
   public int timeToLive;
   public String filename;

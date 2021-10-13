@@ -1,6 +1,8 @@
 package com.lib.index_server;
 
-public class MessageID {
+import java.io.Serializable;
+
+public class MessageID implements Serializable {
   public int superpeerId;
   public int peerId;
   public int seq;
