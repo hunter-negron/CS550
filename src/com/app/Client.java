@@ -134,6 +134,11 @@ public class Client {
       ex.printStackTrace();
     }
 
+    if(timeToLive <= 0) {
+      System.err.println("ERROR: timeToLive is <= 0.");
+      System.exit(0);
+    }
+
     try{
       centralServer = (RMIServerInterface)Naming.lookup(rmiServerStr + superpeerId); // connect to index server
     }

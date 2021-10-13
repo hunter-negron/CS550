@@ -51,7 +51,7 @@ public class CentralServer {
     }
 
     try{
-      RMIServerInterface is = new IndexServer(id, rmiServerStr + id, neighbors, bufferSize, timeToLive);
+      RMIServerInterface is = new IndexServer(id, rmiServerStr + id, neighbors, bufferSize);
     }
     catch (Exception ex) {
       System.err.println("EXCEPTION: CentralServer Exception while creating server: " + ex.toString());

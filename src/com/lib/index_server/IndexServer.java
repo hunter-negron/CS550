@@ -24,12 +24,12 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
   private ArrayList<Query> queryQueue; // queue of query messages received from neighbors
   private ArrayList<QueryHit> queryHitQueue; // queue of queryhit messages received from neighbors
 
-  public IndexServer(int superpeerId, String rmiInterfaceString, ArrayList<Integer> neighborIds, int bufferSize, int timeToLive) throws RemoteException {
+  public IndexServer(int superpeerId, String rmiInterfaceString, ArrayList<Integer> neighborIds, int bufferSize) throws RemoteException {
     super();
 
     // If this check is true, then either the config was not properly parsed or code has not yet been implemented to parse the config yet
-    if(bufferSize <= 0 || timeToLive <= 0) {
-      System.err.println("ERROR: IndexServer bufferSize or timeToLive is <= 0.");
+    if(bufferSize <= 0) {
+      System.err.println("ERROR: IndexServer bufferSize is <= 0.");
       System.exit(0);
     }
 
