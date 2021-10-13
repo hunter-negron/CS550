@@ -12,6 +12,8 @@ import java.util.concurrent.Callable;
 import com.lib.watch_dir.WatchDir;
 import com.lib.interfaces.*;
 import com.lib.peer_client.*;
+import com.lib.index_server.Query;
+import com.lib.index_server.QueryHit;
 
 import org.json.*;
 
@@ -29,6 +31,8 @@ public class Client {
   private static String jsonConfig;
   private static int configId; // for using as an index into JSON config ONLY!
   private static int superpeerId;
+  private static int timeToLive;
+  private static int seq = 0;
 
   public static void PrintMessageLn(String str){
     System.out.println("PEER(" + myPeerId + "): " + str);
@@ -124,6 +128,7 @@ public class Client {
       String rawJson = Files.readString(filePath);
       JSONObject json = new JSONObject(rawJson);
       superpeerId = json.getJSONArray("peers").getInt(configId);
+      timeToLive = json.getInt("timeToLive");
     } catch(Exception ex) {
       System.err.println("EXCEPTION: Client Exception while PARSING json config: " + ex.toString());
       ex.printStackTrace();
@@ -209,6 +214,13 @@ public class Client {
         try{
           // Get list of peer IDs who have desired file
           ArrayList<Integer> clientList = centralServer.search(strInput);
+          Query query = new Query();
+          query.messageId.superpeerId = superpeerId;
+          query.messageId.peerId = myPeerId;
+          query.messageId.seq = seq++;
+          query.timeToLive = timeToLive;
+          query.filename = strInput;
+          QueryHit queryHit = centralServer.forwardQuery(query);
 
           if(clientList == null || clientList.size() == 0){
             System.err.println("ERROR: OOPS! None of the clients have file " + strInput);
