@@ -10,6 +10,8 @@
 
 OPTION=$1
 SHARED_DIRECTORY=$2
+CONFIG_FILE=$3
+CONFIG_ID=$4
 
 function exit_err {
   exit 1;
@@ -25,23 +27,24 @@ function usage {
   echo "    $0 [OPTION s|c]"
   echo "    s - run server."
   echo "    c - run client."
+  echo "    $0 [OPTION] [SHARED_DIRECTORY] [CONFIG_FILE] [CONFIG_ID]"
+  echo "    CONFIG_FILE must be in the same directory as $0"
 }
 
-if [ -z "$OPTION" ]; then
-  echo "Invalid: Option parameter missing.";
+if [ -z "$OPTION" ] || [ -z "$SHARED_DIRECTORY" ] || [ -z "$CONFIG_FILE" ] || [ -z "$CONFIG_ID" ]; then
+  echo "Invalid: Parameters missing.";
   usage;
   exit_err;
 fi
 
+SHARED_DIRECTORY=$(cd $(dirname $SHARED_DIRECTORY); pwd)/$(basename $SHARED_DIRECTORY) # Convert relative path to abolute path
+DIR=$PWD
+cd build
+
 if [ "$OPTION" = "s" ]; then
-  java -cp ./build com.app.server.CentralServer
+  java -cp $DIR/src/com/lib/thirdparty/json-20210307.jar: com.app.server.CentralServer $SHARED_DIRECTORY $DIR/$CONFIG_FILE $CONFIG_ID
 fi
 
 if [ "$OPTION" = "c" ]; then
-  if [ -z "$SHARED_DIRECTORY" ]; then
-    client_usage;
-    exit_err;
-  fi
-
-  java -cp ./build com.app.client.Client $SHARED_DIRECTORY
+  java -cp $DIR/src/com/lib/thirdparty/json-20210307.jar: com.app.client.Client $SHARED_DIRECTORY $DIR/$CONFIG_FILE $CONFIG_ID
 fi
