@@ -21,8 +21,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
 
   private ArrayList<RMIServerInterface> neighbors; // holds connections to all neighbor superpeers
   private int id; // this superpeer ID
-  private ArrayList<Query> queryQueue; // queue of query messages received from neighbors
-  private ArrayList<QueryHit> queryHitQueue; // queue of queryhit messages received from neighbors
+  private Map<MessageID, Integer> queries; // buffer of query messages received from neighbors and forwarded
 
   public IndexServer(int superpeerId, String rmiInterfaceString, ArrayList<Integer> neighborIds, int bufferSize) throws RemoteException {
     super();
@@ -37,6 +36,15 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     fileIndex = new HashMap<String, ArrayList<Integer>>();
     rpiIndex = new HashMap<Integer, RegisteredPeerInfo>();
     id = superpeerId;
+
+    // a LinkedHashMap allows us to efficiently remove the oldest element
+    // automatically when a new element is inserted and it exceeds bufferSize
+    queries = new LinkedHashMap<MessageID, Integer>() {
+        @Override
+        protected boolean removeEldestEntry(final Map.Entry eldest) {
+            return size() > bufferSize;
+        }
+    };
 
     try{
       System.out.println("Binding Server RMI Interface to " + rmiInterfaceString);
@@ -181,6 +189,20 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     QueryHit qh = new QueryHit();
     qh.superpeerId = new ArrayList<Integer>();
     qh.peerId = new ArrayList<Integer>();
+
+    System.out.println(queries);
+    if(queries.containsKey(q.messageId)) {
+      // we've seen this query before, so we can return an empty
+      // queryhit because we returned a real queryhit in the past
+      System.out.println("MESSAGE ALREADY SEEN.");
+      System.out.println(q.messageId);
+      return qh;
+    }
+    else {
+      System.out.println("SAVING MESSAGE.");
+      System.out.println(q.messageId);
+      queries.put(q.messageId, 0); // LinkedHashMap so size is controlled automatically
+    }
 
     try{
     ArrayList<Integer> result = search(q.filename);
