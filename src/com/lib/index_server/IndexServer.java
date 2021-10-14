@@ -190,17 +190,12 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     qh.superpeerId = new ArrayList<Integer>();
     qh.peerId = new ArrayList<Integer>();
 
-    System.out.println(queries);
     if(queries.containsKey(q.messageId)) {
       // we've seen this query before, so we can return an empty
       // queryhit because we returned a real queryhit in the past
-      System.out.println("MESSAGE ALREADY SEEN.");
-      System.out.println(q.messageId);
       return qh;
     }
     else {
-      System.out.println("SAVING MESSAGE.");
-      System.out.println(q.messageId);
       queries.put(q.messageId, 0); // LinkedHashMap so size is controlled automatically
     }
 
