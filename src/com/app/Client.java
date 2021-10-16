@@ -115,10 +115,14 @@ public class Client {
       System.exit(0);
     }
 
+    System.out.println("args[0] = " + args[0]);
+    System.out.println("args[1] = " + args[1]);
+    System.out.println("args[2] = " + args[2]);
+
     // get the command line args
-    dir = args[0];
-    jsonConfig = args[1];
-    configId = Integer.parseInt(args[2]);
+    jsonConfig = args[0];
+    configId = Integer.parseInt(args[1]);
+    dir = args[2];
 
     // Get all non-directory files with file size less than MAX FILE SIZE. see retrieve().
     sharedFiles = ReadSharedDirectory(dir);

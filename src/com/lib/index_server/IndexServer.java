@@ -206,7 +206,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     if(queries.containsKey(q.messageId)) {
       // we've seen this query before, so we can return an empty
       // queryhit because we returned a real queryhit in the past
-      return qh;
+      return null;
     }
 
     QueryHit qh = new QueryHit();
@@ -229,8 +229,10 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
         System.out.println("Forwarding query: message id = " + q.messageId + ", filename = " + q.filename + ", timeToLive = " + q.timeToLive);
         for(RMIServerInterface n : neighbors) {
           QueryHit response = n.forwardQuery(q);
-          qh.superpeerId.addAll(response.superpeerId);
-          qh.peerId.addAll(response.peerId);
+          if(response != null){
+            qh.superpeerId.addAll(response.superpeerId);
+            qh.peerId.addAll(response.peerId);
+          }
         }
       }
     }

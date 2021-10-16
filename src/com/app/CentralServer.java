@@ -21,14 +21,15 @@ public class CentralServer {
 
   public static void main(String[] args) {
     // Check if the name to the shared directory is provided
-    if(args.length != 3) {
-      System.err.println("ARGS: [working dir] [json config file] [superpeer id]");
+    if(args.length != 2) {
+      System.err.println("ARGS: [CONFIG FILE] [SUPERPEER ID]");
       System.exit(0);
     }
 
     // dir = args[0];
-    jsonConfig = args[1];
-    id = Integer.parseInt(args[2]);
+    jsonConfig = args[0];
+    id = Integer.parseInt(args[1]);
+    System.out.println("Starting super peer " + id);
 
     ArrayList<Integer> neighbors = new ArrayList<Integer>();
     int bufferSize = 0;
