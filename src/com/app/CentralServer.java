@@ -45,6 +45,7 @@ public class CentralServer {
       }
       bufferSize = json.getInt("bufferSize");
       timeToLive = json.getInt("timeToLive");
+      System.out.println("Topology type: " + json.getString("topologyType"));
 
     } catch(Exception ex) {
       System.err.println("EXCEPTION: Client Exception while PARSING json config: " + ex.toString());

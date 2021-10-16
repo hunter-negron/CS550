@@ -131,6 +131,7 @@ public class Client {
       JSONObject json = new JSONObject(rawJson);
       superpeerId = json.getJSONArray("peers").getInt(configId);
       timeToLive = json.getInt("timeToLive");
+      System.out.println("Topology type: " + json.getString("topologyType"));
     } catch(Exception ex) {
       System.err.println("EXCEPTION: Client Exception while PARSING json config: " + ex.toString());
       ex.printStackTrace();
