@@ -126,7 +126,8 @@ public class Client {
     // parse config
     try {
       Path filePath = Paths.get(jsonConfig);
-      String rawJson = Files.readString(filePath);
+      // String rawJson = Files.readString(filePath);
+      String rawJson = new String(Files.readAllBytes(Paths.get(jsonConfig)));
       JSONObject json = new JSONObject(rawJson);
       superpeerId = json.getJSONArray("peers").getInt(configId);
       timeToLive = json.getInt("timeToLive");
@@ -136,7 +137,7 @@ public class Client {
     }
 
     if(timeToLive <= 0) {
-      System.err.println("ERROR: timeToLive is <= 0.");
+      System.err.println("ERROR: TTL should be a positive value.");
       System.exit(0);
     }
 
@@ -229,8 +230,13 @@ public class Client {
           query.filename = strInput;
           QueryHit queryHit = centralServer.forwardQuery(query);
 
-          if(queryHit.peerId == null || queryHit.peerId.size() == 0 || queryHit.peerId.size() != queryHit.superpeerId.size()){
+          if(queryHit.peerId == null || queryHit.peerId.size() == 0){
             System.err.println("ERROR: OOPS! None of the clients have file " + strInput);
+            continue;
+          }
+
+          if(queryHit.peerId.size() != queryHit.superpeerId.size()){
+            System.err.println("ERROR: OOPS! Invalid number of peer response received for " + strInput);
             continue;
           }
 

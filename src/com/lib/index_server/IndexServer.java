@@ -21,10 +21,12 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
 
   private ArrayList<RMIServerInterface> neighbors; // holds connections to all neighbor superpeers
   private int id; // this superpeer ID
-  private Map<MessageID, Integer> queries; // buffer of query messages received from neighbors and forwarded
+  private Map<MessageID, Query> queries; // buffer of query messages received from neighbors and forwarded
 
   public IndexServer(int superpeerId, String rmiInterfaceString, ArrayList<Integer> neighborIds, int bufferSize) throws RemoteException {
     super();
+
+    System.out.println("neighborIds " + neighborIds);
 
     // If this check is true, then either the config was not properly parsed or code has not yet been implemented to parse the config yet
     if(bufferSize <= 0) {
@@ -39,12 +41,30 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
 
     // a LinkedHashMap allows us to efficiently remove the oldest element
     // automatically when a new element is inserted and it exceeds bufferSize
-    queries = new LinkedHashMap<MessageID, Integer>() {
-        @Override
-        protected boolean removeEldestEntry(final Map.Entry eldest) {
-            return size() > bufferSize;
+    queries = new HashMap<MessageID, Query>();
+
+    Thread t_ttlMonitor = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        while(true){
+          // System.out.println("monitor: " + queries.size());
+          if(queries != null && queries.size() > 0){
+            for(Map.Entry<MessageID, Query> i : queries.entrySet()) {
+              // Printing all elements of a Map
+              Query q = i.getValue();
+              q.timeToLive -= 1;
+
+              if(q.timeToLive <= 0){
+                queries.remove(q.messageId);
+              }
+            }
+          }
+
+          try { Thread.sleep(1000); }catch(Exception ex){ /* nothing to do */ }
         }
-    };
+      }
+    });
+    t_ttlMonitor.start(); // starting the thread
 
     try{
       System.out.println("Binding Server RMI Interface to " + rmiInterfaceString);
@@ -58,27 +78,38 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
 
     // connect and test
     neighbors = new ArrayList<RMIServerInterface>();
-    int i = 0;
+    // int i = 0;
     RMIServerInterface s;
 
-    while(true) { // keep trying until all successful
-      if(i >= neighborIds.size()) {
-        break;
-      }
+    Set<Integer> neighborSet = new HashSet<Integer>();
 
-      try {
-        s = (RMIServerInterface)Naming.lookup(rmiServerStr + neighborIds.get(i)); // get the server
-        s.testCall(); // if this throws an exception, then we know we're not connected, so try again
-        neighbors.add(s); // if we get here, test was successful so we can add it
-        System.out.println("test success superpeer " + neighborIds.get(i++));
-      }
-      catch(Exception e) {
-        System.out.println(e.toString());
-        //e.printStackTrace();
-        try{Thread.sleep(1000);}catch(Exception ex){}
-        continue;
-      }
+    for (int i = 0; i < neighborIds.size(); i++) {
+      neighborSet.add(neighborIds.get(i));
     }
+
+    while(neighborSet.size() > 0){
+      Iterator<Integer> itr = neighborSet.iterator();
+      while(itr.hasNext()){
+        Integer ns = itr.next();
+        try {
+          System.out.println("Connecting to the superpeer neighbour: " + rmiServerStr + ns);
+          s = (RMIServerInterface)Naming.lookup(rmiServerStr + ns); // get the server
+          s.testCall(); // if this throws an exception, then we know we're not connected, so try again
+          neighbors.add(s); // if we get here, test was successful so we can add it
+          itr.remove();
+          System.out.println("Successfully connected to superpeer neighbour: " + ns);
+        }
+        catch(Exception e) {
+          System.out.println("Connection unsuccessfull for Super peer neighbour :" + rmiServerStr + ns);
+          continue;
+        }
+        finally{
+          System.out.println("Attempting reconnect in 1 second...");
+        }
+      }
+      try{ Thread.sleep(1000); }catch(Exception ex){}
+    }
+
     System.out.println("Done.");
   }
 
@@ -114,20 +145,6 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
 
     rpiIndex.put(rpi.peerId, rpi);
     updateFileList(filenames, rpi);
-
-    // for(String f : filenames) {
-    //   System.out.println("Register file: peer = " + rpi.peerId + " file = \"" + f + "\"");
-
-    //   // check if the file is new in the index
-    //   if(!fileIndex.containsKey(f)) {
-    //     fileIndex.put(f, new ArrayList<Integer>());
-    //   }
-
-    //   // check if the peerId is already present for that particular file.
-    //   if(!fileIndex.get(f).contains(rpi.peerId)){
-    //     fileIndex.get(f).add(rpi.peerId);
-    //   }
-    // }
 
     return rpi.peerIdStr;
   }
@@ -186,38 +203,38 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
 
   @Override
   public QueryHit forwardQuery(Query q) throws RemoteException {
-    QueryHit qh = new QueryHit();
-    qh.superpeerId = new ArrayList<Integer>();
-    qh.peerId = new ArrayList<Integer>();
-
     if(queries.containsKey(q.messageId)) {
       // we've seen this query before, so we can return an empty
       // queryhit because we returned a real queryhit in the past
       return qh;
     }
-    else {
-      queries.put(q.messageId, 0); // LinkedHashMap so size is controlled automatically
-    }
+
+    QueryHit qh = new QueryHit();
+    qh.superpeerId = new ArrayList<Integer>();
+    qh.peerId = new ArrayList<Integer>();
+
+    System.out.println("Query received: message id = " + q.messageId + ", filename = " + q.filename + ", timeToLive = " + q.timeToLive);
+    queries.put(q.messageId, q); // LinkedHashMap so size is controlled automatically
 
     try{
-    ArrayList<Integer> result = search(q.filename);
-    if(result != null) {
-      for(int p : result) {
-        qh.superpeerId.add(id);
-        qh.peerId.add(p);
+      ArrayList<Integer> result = search(q.filename);
+      if(result != null) {
+        for(int p : result) {
+          qh.superpeerId.add(id);
+          qh.peerId.add(p);
+        }
+      }
+
+      if(q.timeToLive > 0) {
+        System.out.println("Forwarding query: message id = " + q.messageId + ", filename = " + q.filename + ", timeToLive = " + q.timeToLive);
+        for(RMIServerInterface n : neighbors) {
+          QueryHit response = n.forwardQuery(q);
+          qh.superpeerId.addAll(response.superpeerId);
+          qh.peerId.addAll(response.peerId);
+        }
       }
     }
-
-    if(q.timeToLive > 0) {
-      q.timeToLive--;
-
-      for(RMIServerInterface n : neighbors) {
-        QueryHit response = n.forwardQuery(q);
-        qh.superpeerId.addAll(response.superpeerId);
-        qh.peerId.addAll(response.peerId);
-      }
-    }
-  }catch(Exception e) {System.out.println("\n\n"); e.printStackTrace(); System.out.println("\n\n");}
+    catch(Exception e) { System.out.println("\n\n"); e.printStackTrace(); System.out.println("\n\n"); }
 
     return qh;
   }

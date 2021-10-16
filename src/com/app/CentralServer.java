@@ -15,7 +15,7 @@ import org.json.*;
 
 public class CentralServer {
   final static String rmiServerStr = "//localhost/central_server";
-  static String dir;
+  // static String dir;
   static String jsonConfig;
   static int id;
 
@@ -26,7 +26,7 @@ public class CentralServer {
       System.exit(0);
     }
 
-    dir = args[0];
+    // dir = args[0];
     jsonConfig = args[1];
     id = Integer.parseInt(args[2]);
 
@@ -37,7 +37,8 @@ public class CentralServer {
     // parse config
     try {
       Path filePath = Paths.get(jsonConfig);
-      String rawJson = Files.readString(filePath);
+      // String rawJson = Files.readString(filePath);
+      String rawJson = new String(Files.readAllBytes(Paths.get(jsonConfig)));
       JSONObject json = new JSONObject(rawJson);
       for(int i = 0; i < json.getJSONArray("superpeers").getJSONArray(id).length(); i++) {
         neighbors.add(json.getJSONArray("superpeers").getJSONArray(id).getInt(i));
