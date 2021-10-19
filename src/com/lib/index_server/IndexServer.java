@@ -21,7 +21,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
 
   private ArrayList<RMIServerInterface> neighbors; // holds connections to all neighbor superpeers
   private int id; // this superpeer ID
-  private Map<MessageID, Query> queries; // buffer of query messages received from neighbors and forwarded
+  private Map<MessageID, Integer> queries; // buffer of query messages received from neighbors and forwarded
 
   public IndexServer(int superpeerId, String rmiInterfaceString, ArrayList<Integer> neighborIds, int bufferSize) throws RemoteException {
     super();
@@ -41,30 +41,12 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
 
     // a LinkedHashMap allows us to efficiently remove the oldest element
     // automatically when a new element is inserted and it exceeds bufferSize
-    queries = new HashMap<MessageID, Query>();
-
-    Thread t_ttlMonitor = new Thread(new Runnable() {
+    queries = new LinkedHashMap<MessageID, Integer>() {
       @Override
-      public void run() {
-        while(true){
-          // System.out.println("monitor: " + queries.size());
-          if(queries != null && queries.size() > 0){
-            for(Map.Entry<MessageID, Query> i : queries.entrySet()) {
-              // Printing all elements of a Map
-              Query q = i.getValue();
-              q.timeToLive -= 1;
-
-              if(q.timeToLive <= 0){
-                queries.remove(q.messageId);
-              }
-            }
-          }
-
-          try { Thread.sleep(1000); }catch(Exception ex){ /* nothing to do */ }
-        }
+      protected boolean removeEldestEntry(final Map.Entry eldest) {
+        return size() > bufferSize;
       }
-    });
-    t_ttlMonitor.start(); // starting the thread
+    };
 
     try{
       System.out.println("Binding Server RMI Interface to " + rmiInterfaceString);
@@ -214,7 +196,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     qh.peerId = new ArrayList<Integer>();
 
     System.out.println("Query received: message id = " + q.messageId + ", filename = " + q.filename + ", timeToLive = " + q.timeToLive);
-    queries.put(q.messageId, q); // LinkedHashMap so size is controlled automatically
+    queries.put(q.messageId, 0); // LinkedHashMap so size is controlled automatically
 
     try{
       ArrayList<Integer> result = search(q.filename);

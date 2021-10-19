@@ -24,6 +24,7 @@ public class Client {
 
   private static String dir;
   private static String peerIdStr; // used to identify peer at the server
+  private static String topologyType;
   private static int myPeerId;
   private static WatchDir wd;
   private static RMIServerInterface centralServer;
@@ -115,10 +116,6 @@ public class Client {
       System.exit(0);
     }
 
-    System.out.println("args[0] = " + args[0]);
-    System.out.println("args[1] = " + args[1]);
-    System.out.println("args[2] = " + args[2]);
-
     // get the command line args
     jsonConfig = args[0];
     configId = Integer.parseInt(args[1]);
@@ -135,7 +132,8 @@ public class Client {
       JSONObject json = new JSONObject(rawJson);
       superpeerId = json.getJSONArray("peers").getInt(configId);
       timeToLive = json.getInt("timeToLive");
-      System.out.println("Topology type: " + json.getString("topologyType"));
+      topologyType = json.getString("topologyType");
+      System.out.println("Topology type: " + topologyType);
     } catch(Exception ex) {
       System.err.println("EXCEPTION: Client Exception while PARSING json config: " + ex.toString());
       ex.printStackTrace();
@@ -223,6 +221,13 @@ public class Client {
           System.exit(0); // This will trigger the shutdown hook so files will be regregistered.
         }
 
+        if(strInput.equals("runEvaluationTest")){
+          PrintMessageLn("Test requested");
+          runEvaluationTest();
+          continue;
+          // System.exit(0);
+        }
+
         try{
           // Get list of peer IDs who have desired file
           //ArrayList<Integer> clientList = centralServer.search(strInput);
@@ -303,5 +308,91 @@ public class Client {
         System.err.println("ERROR: Empty string received in the input!");
       }
     }
+  }
+
+  public static void testIterations(int peerCount, int fileCount, int iterations){
+    int fileOffset = superpeerId + myPeerId;
+    int i = 0;
+
+    try{
+      for(int k = 0; k < iterations; k++){
+        for (i = 0; i < peerCount; i++) {
+          if(i == fileOffset){
+            continue;
+          }
+
+          for(int j = 0; j < fileCount; j++){
+            String strInput = "peer" + i + "_small_file" + j;
+
+            Query query = new Query();
+            query.messageId = new MessageID();
+            query.messageId.superpeerId = superpeerId;
+            query.messageId.peerId = myPeerId;
+            query.messageId.seq = seq++;
+            query.timeToLive = timeToLive;
+            query.filename = strInput;
+            QueryHit queryHit = centralServer.forwardQuery(query);
+          }
+        }
+      }
+    }
+    catch (Exception ex) {
+      System.err.println("EXCEPTION: Client Exception while SEARCHING to central sever: " + ex.toString());
+      ex.printStackTrace();
+    }
+  }
+
+  public static void runEvaluationTest(){
+    System.out.println("========================== TEST LINEAR " + topologyType + " STARTED RESULT ==========================");
+    int peerCount = 17, fileCount = 4, iterations = 0;
+    long startTs, endTs;
+    long diff;
+
+    startTs = System.currentTimeMillis();
+    iterations = 1;
+    testIterations(peerCount, fileCount, iterations);
+    endTs = System.currentTimeMillis();
+
+    diff = endTs - startTs;
+    System.out.println("TEST RESULT 1:");
+    System.out.println("Number of queries = " + peerCount*fileCount*iterations + ", time = " + diff + " ms");
+    System.out.println("Average time per request = " + diff/(peerCount*fileCount) + " ms");
+
+    System.out.println("-----------------------------------------------------------------------------------------");
+
+    startTs = System.currentTimeMillis();
+    iterations = 2;
+    testIterations(peerCount, fileCount, iterations);
+    endTs = System.currentTimeMillis();
+
+    diff = endTs - startTs;
+    System.out.println("TEST RESULT 2:");
+    System.out.println("Number of queries = " + peerCount*fileCount*iterations + ", time = " + diff + " ms");
+    System.out.println("Average time per request = " + diff/(peerCount*fileCount) + " ms");
+
+    System.out.println("-----------------------------------------------------------------------------------------");
+
+    startTs = System.currentTimeMillis();
+    iterations = 3;
+    testIterations(peerCount, fileCount, iterations);
+    endTs = System.currentTimeMillis();
+
+    diff = endTs - startTs;
+    System.out.println("TEST RESULT 3:");
+    System.out.println("Number of queries = " + peerCount*fileCount*iterations + ", time = " + diff + " ms");
+    System.out.println("Average time per request = " + diff/(peerCount*fileCount) + " ms");
+
+    System.out.println("-----------------------------------------------------------------------------------------");
+
+    startTs = System.currentTimeMillis();
+    iterations = 4;
+    testIterations(peerCount, fileCount, iterations);
+    endTs = System.currentTimeMillis();
+
+    diff = endTs - startTs;
+    System.out.println("TEST RESULT 4:");
+    System.out.println("Number of queries = " + peerCount*fileCount*iterations + ", time = " + diff + " ms");
+    System.out.println("Average time per request = " + diff/(peerCount*fileCount) + " ms");
+    System.out.println("================================= TEST LINEAR " + topologyType + " END ==============================");
   }
 }

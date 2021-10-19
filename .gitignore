@@ -5,3 +5,6 @@ build
 .project
 *.class
 *share
+*server.output*
+*servers.output*
+*.pid
