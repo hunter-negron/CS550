@@ -18,5 +18,9 @@
 
   "bufferSize": 64,
 
-  "timeToLive": 8
+  "timeToLive": 8,
+
+  "validationMethod": "push",
+
+  "timeToRefresh": 1
 }

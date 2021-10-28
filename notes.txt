@@ -13,3 +13,67 @@ TO DO
 add makefile
 
 Handle buffer stream for Large files
+
+PA3 TO DO
+parse validationMethod and timeToRefresh from the config file
+
+PUSH VALIDATIOIN METHOD
+  when the auto-update mechanism detects file MODIFIED AND IT IS THE OWNER, call the server with new version details
+    this call will happen from the auto update mechanism thread
+    may need to send TTL to server? included in INVALIDATION message
+    TTL: then we have to handle whether the superpeer has the the INVALIDATION message before (just like queries)
+  implement INVALIDATION message class
+    as spcified in assignment
+    with TTL?
+  if the auto-update mechanism detects file MODIFIED AND NOT THE OWNER, just deregister and delete it?
+    this is an issue and theoretically this case shouldn't exist
+    practically, a modification of a local copy of a foreign file should be treated just
+      like if the modification were to have happened on the master copy; only this time,
+      the modification is not valid and so this peer does not get the privelege of broadcasting
+      an INVALIDATION message to anyone. it basically just invalidated the file itself.
+  implement data structure for CLIENT to keep track of all files and their validation creds
+    this structure is only used in the auto-update mechanism thread (?)
+    this will be used to check whether
+  new remote function for superpeer to send and receive INVALIDATION message
+    similar to forwardQuery()
+    in this remote function, the server will broadcast INVALIDATION message to neighor superpeers (use same TTL from config file)
+    INVALIDATION message is broadcasted just like QUERY message
+    called by the auto-update mechanism thread of the client
+    check the existing data structure to see if this superpeer has an entry for the file
+    for every connected leafnode peer client that is NOT the owner of this file,
+      deregister it and notify leafnode peer client to delete it
+  new remote function for leafnode peer client to discard invalidated file
+    called by the above remote function of the superpeer
+    deletes file
+  new data structure for superpeer to track whethere an INVALIDATION message has been seen before
+    do we need this? is it a problem if a superpeer receives the same INVALIDATION message twice?
+  add option to client command prompt to "modify" a file that the peer client owns for testing
+    select from list of files the peer client owns
+    modification: add a line of text or something basic
+  wrap all this code in "if(validationmethod == push)" if statement
+
+PULL VALIDATION METHOD
+  add extra fields to the FileInfo class as specified
+    origin server ID, TTR, last-modified-time
+    last-modified-time is the latest version of the master
+    the TTR is specified by the SERVER (this is why it is in the FileInfo class)
+  figure out how to tell when TTR has expired
+    store the TTR and a timestamp of when the file was saved in the new data structure (specified above)
+    if the new thread (specified below) detects that current time >= file timestamp + TTR, then the TTR has expired
+  create new thread on CLIENT that sleeps for TTR time (or maybe fraction of it) and then wakes up and checks the TTR for each downloaded file
+    if TTR expired (using method described above), then call poll on the ORIGINAL server (this info is stored in the client's new file data structure)
+    if poll returns file out-of-date message, deregister and delete it
+    print that it is doing so
+    eager polling seems easier than lazy polling
+  add a POLL class?
+    file name, version
+  add poll remote function to superpeer
+    receives filename and version from a peer with a downloaded copy of a file
+    check version agaginst the registry that contains the master file
+    if master is newer respond with out-of-date indication message
+    otherwise return new TTR
+  add  option to client terminal prompt to "refresh" an outdated file
+    download a new copy of that file, update data structure accordingly
+
+is there a way to mark a file READONLY after we download it?
+  managing folders seems messy, but we might have to do that

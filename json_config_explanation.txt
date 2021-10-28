@@ -17,3 +17,12 @@ and knows where to back-propagate a queryhit message
 TTL
 time to live
 so a message is not forwarded indefinitely
+
+validationMethod
+whether files retrieved from other peers should be validated using a push-based approach or pull-based approach.
+if pull-based, the TTR value will be used to know when to poll to validate a file.
+
+TTR
+time to refresh
+an actual quantity of time IN MINUTES for how long the peer client should wait before polling the origin server
+to check whether the file is valid.
