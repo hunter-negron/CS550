@@ -13,6 +13,13 @@ public class WatchDir {
   private Path p;
   private boolean keepWatching;
 
+  /* --- start PA3 change --- */
+  //define callback interface
+  public interface ModifiedFileCallback {
+    public void onFileModified(String filename);
+  }
+  /* ---- end PA3 change ---- */
+
   @SuppressWarnings("unchecked")
   private static <T> WatchEvent<T> cast(WatchEvent<?> event) {
     return (WatchEvent<T>)event;
@@ -30,7 +37,7 @@ public class WatchDir {
     }
   }
 
-  public void BeginWatch(Callable<Void> cb){
+  public void BeginWatch(Callable<Void> cb, ModifiedFileCallback modify_cb){
     keepWatching = true;
     while (keepWatching) {
       WatchKey wk;
@@ -42,6 +49,12 @@ public class WatchDir {
           Path filename = ev.context();
 
           try{
+            /* --- start PA3 change --- */
+            if(e.kind() == ENTRY_MODIFY) {
+              modify_cb.onFileModified(filename.getFileName().toString());
+            }
+            /* ---- end PA3 change ---- */
+
             cb.call();
           }
           catch(Exception exp){

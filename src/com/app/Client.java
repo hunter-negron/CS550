@@ -198,6 +198,29 @@ public class Client {
 
             return null;
           }
+        },
+        /* --- start PA3 change --- */
+        new WatchDir.ModifiedFileCallback() {
+            @Override
+            public void onFileModified(String filename) {
+              Invalidation inv = new Invalidation();
+              inv.messageId = new MessageID();
+              inv.messageId.superpeerId = superpeerId;
+              inv.messageId.peerId = myPeerId;
+              inv.messageId.seq = seq++;
+              inv.timeToLive = timeToLive;
+              inv.originServerId = superpeerId;
+              inv.originPeerId = myPeerId;
+              inv.filename = filename;
+              //inv.version = ; // get from file store
+              try {
+                centralServer.forwardInvalidation(inv);
+              }
+              catch(Exception ex) {
+                System.err.println("EXCEPTION: Client Exception while calling forwardInvalidation: " + ex.toString());
+              }
+            }
+        /* ---- end PA3 change ---- */
         });
       }
     });

@@ -57,6 +57,7 @@ PUSH VALIDATIOIN METHOD
     should we be deregistering/deleting invalid files, or just marking them so?
     if we're deleting, why do we need the invalid flag?
     if we have invalid files, do we need to automatically re-retrieve them?
+  at startup, client should load all its files into the fileStore of RetrievedFileInfo's, and mark the OWNER field as TRUE
 
 PULL VALIDATION METHOD
   add extra fields to the FileInfo class as specified

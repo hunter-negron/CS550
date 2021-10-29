@@ -121,7 +121,7 @@ public class PeerTest1 implements Runnable {
     Thread t_watch = new Thread(new Runnable() {
       @Override
       public void run() {
-        wd.BeginWatch(new Callable<Void>() {
+        /*wd.BeginWatch(new Callable<Void>() {
           public Void call() {
             try{
               // If any change is detected, the peer needs to read the directory again
@@ -136,7 +136,7 @@ public class PeerTest1 implements Runnable {
 
             return null;
           }
-        });
+        });*/
       }
     });
     t_watch.start(); // starting the thread

@@ -10,4 +10,5 @@ public class RetrievedFileInfo implements Serializable {
   boolean valid;
   Date lastVerfied;
   int timeToRefresh; // in minutes
+  boolean owner;
 }
