@@ -52,6 +52,11 @@ PUSH VALIDATIOIN METHOD
     select from list of files the peer client owns
     modification: add a line of text or something basic
   wrap all this code in "if(validationmethod == push)" if statement
+  change superpeer to only include valid files in a queryhit
+    do we need this if we deregister invalid files?
+    should we be deregistering/deleting invalid files, or just marking them so?
+    if we're deleting, why do we need the invalid flag?
+    if we have invalid files, do we need to automatically re-retrieve them?
 
 PULL VALIDATION METHOD
   add extra fields to the FileInfo class as specified

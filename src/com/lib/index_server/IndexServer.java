@@ -22,6 +22,9 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
   private ArrayList<RMIServerInterface> neighbors; // holds connections to all neighbor superpeers
   private int id; // this superpeer ID
   private Map<MessageID, Query> queries; // buffer of query messages received from neighbors and forwarded
+  /* --- start PA3 change --- */
+  private Map<MessageID, Invalidation> invalidations; // buffer of invalidation messages received from neighbors and forwarded
+  /* ---- end PA3 change ---- */
 
   public IndexServer(int superpeerId, String rmiInterfaceString, ArrayList<Integer> neighborIds, int bufferSize) throws RemoteException {
     super();
@@ -65,6 +68,16 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
       }
     });
     t_ttlMonitor.start(); // starting the thread
+
+
+    /* --- start PA3 change --- */
+    invalidations = new LinkedHashMap<MessageID, Invalidation>() {
+        @Override
+        protected boolean removeEldestEntry(final Map.Entry eldest) {
+            return size() > bufferSize;
+        }
+    };
+    /* ---- end PA3 change ---- */
 
     try{
       System.out.println("Binding Server RMI Interface to " + rmiInterfaceString);
@@ -240,4 +253,31 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
 
     return qh;
   }
+
+  /* --- start PA3 change --- */
+  @Override
+  public void forwardInvalidation(Invalidation inv) throws RemoteException {
+    // works just like forwardQuery()
+    if(!invalidations.containsKey(inv.messageId)) {
+      // we haven't seen this invalidation message before
+
+      ArrayList<Integer> peers = fileIndex.get(inv.filename);
+      for(int pid : peers) {
+        // if this is the origin server, DON'T invalidate the owner of the file
+        if(!(inv.originServerId == id && inv.originPeerId == pid)) {
+          /* CALL INVALIDATE_FILE REMOTE METHOD HERE AND DEREGISTER THE FILE? */
+          System.out.println("Invalidation: message id = " + inv.messageId + ", filename = " + inv.filename + ", originPeer = " + inv.originPeerId);
+        }
+      }
+
+      // forward the invalidation message to neighbors
+      if(inv.timeToLive > 0) {
+        inv.timeToLive--;
+        for(RMIServerInterface n : neighbors) {
+          n.forwardInvalidation(inv);
+        }
+      }
+    }
+  }
+  /* ---- end PA3 change ---- */
 }
