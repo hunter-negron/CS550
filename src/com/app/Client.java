@@ -15,6 +15,7 @@ import com.lib.peer_client.*;
 import com.lib.index_server.Query;
 import com.lib.index_server.QueryHit;
 import com.lib.index_server.MessageID;
+import com.lib.index_server.Invalidation;
 
 import org.json.*;
 
@@ -34,6 +35,10 @@ public class Client {
   private static int superpeerId;
   private static int timeToLive;
   private static int seq = 0;
+
+  /* --- start PA3 change --- */
+  private static Map<String, RetrievedFileInfo> fileStore;
+  /* ---- end PA3 change ---- */
 
   public static void PrintMessageLn(String str){
     System.out.println("PEER(" + myPeerId + "): " + str);
@@ -145,6 +150,11 @@ public class Client {
       System.err.println("ERROR: TTL should be a positive value.");
       System.exit(0);
     }
+
+    // initialize member variables
+    /* --- start PA3 change --- */
+    fileStore = new HashMap<String, RetrievedFileInfo>();
+    /* ---- end PA3 change ---- */
 
     try{
       centralServer = (RMIServerInterface)Naming.lookup(rmiServerStr + superpeerId); // connect to index server
