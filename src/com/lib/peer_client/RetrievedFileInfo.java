@@ -4,11 +4,11 @@ import java.util.*;
 import java.io.Serializable;
 
 public class RetrievedFileInfo implements Serializable {
-  int version;
-  int originServerId;
-  int originPeerId;
-  boolean valid;
-  Date lastVerfied;
-  int timeToRefresh; // in minutes
-  boolean owner;
+  public int version;
+  public int originServerId;
+  public int originPeerId;
+  public boolean valid;
+  public Date lastVerified;
+  public int timeToRefresh; // in minutes. should be -1 if owner == true
+  public boolean owner;
 }

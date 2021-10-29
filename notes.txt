@@ -35,14 +35,6 @@ PUSH VALIDATIOIN METHOD
       like if the modification were to have happened on the master copy; only this time,
       the modification is not valid and so this peer does not get the privelege of broadcasting
       an INVALIDATION message to anyone. it basically just invalidated the file itself.
-  new remote function for superpeer to send and receive INVALIDATION message
-    similar to forwardQuery()
-    in this remote function, the server will broadcast INVALIDATION message to neighor superpeers (use same TTL from config file)
-    INVALIDATION message is broadcasted just like QUERY message
-    called by the auto-update mechanism thread of the client
-    check the existing data structure to see if this superpeer has an entry for the file
-    for every connected leafnode peer client that is NOT the owner of this file,
-      deregister it and notify leafnode peer client to delete it
   new remote function for leafnode peer client to discard invalidated file
     called by the above remote function of the superpeer
     deletes file
@@ -90,3 +82,11 @@ PUSH-BASED APPROACH
   implement data structure for CLIENT to keep track of all files and their validation creds
     this structure is only used in the auto-update mechanism thread (?)
     this will be used to check whether
+  new remote function for superpeer to send and receive INVALIDATION message
+    similar to forwardQuery()
+    in this remote function, the server will broadcast INVALIDATION message to neighor superpeers (use same TTL from config file)
+    INVALIDATION message is broadcasted just like QUERY message
+    called by the auto-update mechanism thread of the client
+    check the existing data structure to see if this superpeer has an entry for the file
+    for every connected leafnode peer client that is NOT the owner of this file,
+      deregister it and notify leafnode peer client to delete it

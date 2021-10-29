@@ -166,6 +166,21 @@ public class Client {
 
     try {
       peerIdStr = centralServer.register(rmiStr, sharedFiles, null);         // registering the files
+
+      /* --- start PA3 change --- */
+      for(String fn : sharedFiles) {
+        RetrievedFileInfo rfi = new RetrievedFileInfo();
+        rfi.version = 1;
+        rfi.originServerId = superpeerId;
+        rfi.originPeerId = myPeerId;
+        rfi.valid = true;
+        rfi.lastVerified = new Date();
+        rfi.timeToRefresh = -1;
+        rfi.owner = true;
+        fileStore.put(fn, rfi);
+      }
+      /* ---- end PA3 change ---- */
+
       System.out.println("My peer identifier is " + peerIdStr);
 
       // need to get these strings dynamically
