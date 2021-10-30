@@ -100,5 +100,19 @@ public class PeerClient extends UnicastRemoteObject implements RMIClientInterfac
       System.out.println("Client " + id + " invalidateFile: we don't have the file \"" + filename + "\"");
     }
   }
+
+  @Override
+  public boolean poll(String filename, int version) {
+    System.out.println("Client " + id + " poll called: filename = " + filename + ", version = " + version);
+    if(fileStore.containsKey(filename)) {
+      // if true, the polling peer has the latest version, so they still have a valid copy
+      // if false, the polling peer has an out-of-date version, so invalidate it
+      return fileStore.get(filename).version == version;
+    }
+    else {
+      System.out.println("Client " + id + " poll: we don't have the file \"" + filename + "\"");
+      return true;
+    }
+  }
   /* ---- end PA3 change ---- */
 }

@@ -159,6 +159,7 @@ public class Client {
         System.err.println("Invalid validation method \"" + validationMethod + "\". Exiting.");
         System.exit(0);
       }
+      System.out.println("Validation method: " + validationMethod);
       /* ---- end PA3 change ---- */
       System.out.println("Topology type: " + json.getString("topologyType"));
     } catch(Exception ex) {
@@ -313,6 +314,58 @@ public class Client {
       }
     });
     t_watch.start(); // starting the thread
+
+    /* --- start PA3 change --- */
+    // if we are using the poll-based validation method, start this thread
+    if(validationMethod.equals("pull")) {
+      Thread t_poll = new Thread(new Runnable() {
+        @Override
+        public void run() {
+          Calendar c = Calendar.getInstance();
+          Calendar now = Calendar.getInstance();
+
+          while(true) {
+            for (Map.Entry<String, RetrievedFileInfo> entry : pc.fileStore.entrySet()) {
+              String filename = entry.getKey();
+              RetrievedFileInfo rfi = entry.getValue();
+
+              c.setTime(rfi.lastVerified);
+              c.add(Calendar.MINUTE, rfi.timeToRefresh);
+              now.setTime(new Date());
+
+              if(rfi.owner == false && c.compareTo(now) < 0) { // if we are not the owner and lastVerfied + TTR < now, then poll
+                try {
+                  RMIClientInterface peer = (RMIClientInterface)Naming.lookup(rmiStr + rfi.originServerId + "/" + rfi.originPeerId);
+                  if(peer != null) {
+                    if(peer.poll(filename, rfi.version)) {
+                      // poll returns true so this version of the file is still valid
+                      rfi.lastVerified = new Date();
+                      rfi.valid = true;
+                    }
+                    else {
+                      // poll returns false so we have an invalid copy
+                      rfi.lastVerified = new Date(); // should I do this here?
+                      rfi.valid = false;
+                    }
+                  }
+                  else {
+                    PrintMessageLn("Unable to connect to peer " + rfi.originServerId + "/" + rfi.originPeerId + ".");
+                  }
+                }
+                catch (Exception ex) {
+                  System.err.println("EXCEPTION: Client Exception while CONNECTING AND POLLING to peer client: " + ex.toString());
+                  ex.printStackTrace();
+                }
+              }
+            }
+
+            try { Thread.sleep(2000); } catch(Exception e){} // sleep for 2 seconds
+          }
+        }
+      });
+      t_poll.start(); // starting the thread
+    }
+    /* ---- end PA3 change ---- */
 
     Runtime.getRuntime().addShutdownHook(new Thread(){
       @Override

@@ -40,10 +40,6 @@ PUSH VALIDATIOIN METHOD
     I'm not sure when each happens but it's a problem
 
 PULL VALIDATION METHOD
-  add extra fields to the FileInfo class as specified
-    origin server ID, TTR, last-modified-time
-    last-modified-time is the latest version of the master
-    the TTR is specified by the SERVER (this is why it is in the FileInfo class)
   figure out how to tell when TTR has expired
     store the TTR and a timestamp of when the file was saved in the new data structure (specified above)
     if the new thread (specified below) detects that current time >= file timestamp + TTR, then the TTR has expired
@@ -63,6 +59,15 @@ PULL VALIDATION METHOD
     download a new copy of that file, update data structure accordingly
 
 COMPLETED
+PULL-BASED APPROACH
+  the version in RetrievedFileInfo acts as the last-modified-time
+  when a client polls about a file it owns and the version is the same (file is valid),
+    it just updates the lastVerified Date to now
+  add extra fields to the FileInfo class as specified
+    origin server ID, TTR, last-modified-time
+    last-modified-time is the latest version of the master
+    the TTR is specified by the SERVER (this is why it is in the FileInfo class)
+
 PUSH-BASED APPROACH
   implement INVALIDATION message class
     as spcified in assignment
