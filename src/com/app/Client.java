@@ -29,6 +29,7 @@ public class Client {
   private static WatchDir wd;
   private static RMIServerInterface centralServer;
   private static Vector<String> sharedFiles;
+  private static PeerClient pc;
 
   private static String jsonConfig;
   private static int configId; // for using as an index into JSON config ONLY!
@@ -92,6 +93,15 @@ public class Client {
             out.flush();
             out.close();
             // PrintMessageLn("Done writing data...");
+
+            /* --- start PA3 change --- */
+            // add to file store
+            RetrievedFileInfo rfi = fileinfo.retrievedFileInfo;
+            rfi.lastVerified = new Date();
+            rfi.owner = false;
+            pc.insertIntoFileStore(fileinfo.filename, rfi);
+            /* ---- end PA3 change ---- */
+
           }
           catch(Exception e){
             e.printStackTrace();
@@ -162,7 +172,7 @@ public class Client {
 
       // need to get these strings dynamically
       myPeerId = Integer.parseInt(peerIdStr.split("_")[1]);
-      PeerClient pc = new PeerClient(rmiStr + superpeerId + "/", myPeerId, dir);
+      pc = new PeerClient(rmiStr + superpeerId + "/", myPeerId, dir);
 
       /* --- start PA3 change --- */
       for(String fn : sharedFiles) {
