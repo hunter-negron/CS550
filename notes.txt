@@ -19,10 +19,11 @@ PA3 TO DO
 /* --- start PA3 change --- */
 /* ---- end PA3 change ---- */
 
-parse validationMethod and timeToRefresh from the config file
-
 is there a way to mark a file READONLY after we download it?
   managing folders seems messy, but we might have to do that
+
+shutting down a client that has invalid/deregistered files throws an exception
+I don't understand when the watch directory service returns EVENT_MODIFY vs EVENT_CREATE
 
 PUSH VALIDATIOIN METHOD
   add option to client command prompt to "modify" a file that the peer client owns for testing
@@ -40,24 +41,20 @@ PUSH VALIDATIOIN METHOD
     I'm not sure when each happens but it's a problem
 
 PULL VALIDATION METHOD
-  figure out how to tell when TTR has expired
-    store the TTR and a timestamp of when the file was saved in the new data structure (specified above)
-    if the new thread (specified below) detects that current time >= file timestamp + TTR, then the TTR has expired
-  create new thread on CLIENT that sleeps for TTR time (or maybe fraction of it) and then wakes up and checks the TTR for each downloaded file
-    if TTR expired (using method described above), then call poll on the ORIGINAL server (this info is stored in the client's new file data structure)
-    if poll returns file out-of-date message, deregister and delete it
-    print that it is doing so
-    eager polling seems easier than lazy polling
-  add a POLL class?
-    file name, version
-  add poll remote function to superpeer
-    receives filename and version from a peer with a downloaded copy of a file
-    check version agaginst the registry that contains the master file
-    if master is newer respond with out-of-date indication message
-    otherwise return new TTR
   add  option to client terminal prompt to "refresh" an outdated file
     download a new copy of that file, update data structure accordingly
+  right now to find out if TTR expired, we keep track of the lastVerified timestamp and when thread wake up, if more than TTR has passed since then, we poll
+    poll just returns true or false depending on the validity of the version of the file. true = just update lastVerfied. false = invalidate & deregister
+    however, the assignment seems to imply that the best way is to decrement TTR until it is zero and then invalidate the file
+      when thread wakes up, decrement all TTR as appropriate. Those that are 0, poll
+      poll returns invalid message or a new TTR to replace the one that is now zero
+    either way, we check first that we are not the owner of the file. we don't need to poll for our own files, obviously.
+  assignment suggests to poll the SERVER but ours is written to poll the PEER CLIENT.
+    we did it this way because the client keeps track of the validity of all its files. invalid files get deregistered
+  factor out all "invalidate and deregister" blocks of code into a single function
 
+_____________________________________________________________________________________________________
+_____________________________________________________________________________________________________
 COMPLETED
 PULL-BASED APPROACH
   the version in RetrievedFileInfo acts as the last-modified-time
@@ -67,6 +64,22 @@ PULL-BASED APPROACH
     origin server ID, TTR, last-modified-time
     last-modified-time is the latest version of the master
     the TTR is specified by the SERVER (this is why it is in the FileInfo class)
+  figure out how to tell when TTR has expired
+    store the TTR and a timestamp of when the file was saved in the new data structure (specified above)
+    if the new thread (specified below) detects that current time >= file timestamp + TTR, then the TTR has expired
+  add a POLL class? NO
+    file name, version
+  add poll remote function to superpeer
+    receives filename and version from a peer with a downloaded copy of a file
+    check version agaginst the registry that contains the master file
+    if master is newer respond with out-of-date indication message
+  create new thread on CLIENT that sleeps for TTR time (or maybe fraction of it) and then wakes up and checks the TTR for each downloaded file
+    if TTR expired (using method described above), then call poll on the ORIGINAL server (this info is stored in the client's new file data structure)
+    if poll returns file out-of-date message, deregister and delete it
+    print that it is doing so
+    eager polling seems easier than lazy polling
+    otherwise return new TTR
+  parse validationMethod and timeToRefresh from the config file
 
 PUSH-BASED APPROACH
   implement INVALIDATION message class

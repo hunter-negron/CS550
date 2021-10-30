@@ -321,31 +321,48 @@ public class Client {
       Thread t_poll = new Thread(new Runnable() {
         @Override
         public void run() {
+          System.out.println("Starting the polling thread.");
           Calendar c = Calendar.getInstance();
           Calendar now = Calendar.getInstance();
 
+          // keep checking forever
           while(true) {
+            // for every file that we have in the store, if TTR has passed, then poll
             for (Map.Entry<String, RetrievedFileInfo> entry : pc.fileStore.entrySet()) {
               String filename = entry.getKey();
               RetrievedFileInfo rfi = entry.getValue();
 
+              // calendar manipulation is the easiest way to add timestamps
+              // it's clunky but it should work
               c.setTime(rfi.lastVerified);
-              c.add(Calendar.MINUTE, rfi.timeToRefresh);
+              c.add(Calendar.SECOND, rfi.timeToRefresh);
               now.setTime(new Date());
 
-              if(rfi.owner == false && c.compareTo(now) < 0) { // if we are not the owner and lastVerfied + TTR < now, then poll
+              if(rfi.valid == true && rfi.owner == false && c.compareTo(now) < 0) { // if we are not the owner and lastVerfied + TTR < now, then poll
+                System.out.print("Polling... ");
                 try {
                   RMIClientInterface peer = (RMIClientInterface)Naming.lookup(rmiStr + rfi.originServerId + "/" + rfi.originPeerId);
                   if(peer != null) {
                     if(peer.poll(filename, rfi.version)) {
+                      System.out.println("Valid :)");
                       // poll returns true so this version of the file is still valid
                       rfi.lastVerified = new Date();
                       rfi.valid = true;
                     }
                     else {
-                      // poll returns false so we have an invalid copy
+                      System.out.println("Not valid :(");
+                      // poll returns false so we have an invalid copy. deregister it
                       rfi.lastVerified = new Date(); // should I do this here?
                       rfi.valid = false;
+                      Vector<String> v = new Vector<String>();
+                      v.add(filename);
+                      try {
+                        centralServer.deregister(peerIdStr, v);
+                      }
+                      catch(Exception e) {
+                        System.err.println("EXCEPTION: Client Exception while CONNECTING to superpeer to DEREGISTER a POLL-INVALIDATED file: " + e.toString());
+                        e.printStackTrace();
+                      }
                     }
                   }
                   else {
@@ -392,6 +409,24 @@ public class Client {
       strInput = sc.nextLine();
 
       if(strInput.length() != 0){
+        if(strInput.equals("f")){
+          System.out.println("\n{");
+          for (Map.Entry<String, RetrievedFileInfo> entry : pc.fileStore.entrySet()) {
+            String filename = entry.getKey();
+            RetrievedFileInfo rfi = entry.getValue();
+            System.out.println("  {filename:      " + filename);
+            System.out.println("  version:        " + rfi.version);
+            System.out.println("  originServerId; " + rfi.originServerId);
+            System.out.println("  originPeerId:   " + rfi.originPeerId);
+            System.out.println("  valid:          " + rfi.valid);
+            System.out.println("  lastVerified:   " + rfi.lastVerified);
+            System.out.println("  timeToRefresh:  " + rfi.timeToRefresh);
+            System.out.println("  owner:          " + rfi.owner + "},");
+          }
+          System.out.println("}\n");
+          continue;
+        }
+
         if(strInput.equals("q")){
           PrintMessageLn("Quitting.");
           System.exit(0); // This will trigger the shutdown hook so files will be regregistered.

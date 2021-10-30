@@ -64,7 +64,7 @@ public class WatchDir {
             // I DON'T KNOW WHY BUT THIS WORKS (FOR NOW)
             // UPDATE:
             // THEY SWITCH SOMETIMES?? IDK. FIX THIS BUG LATER.
-            if(e.kind() == ENTRY_MODIFY) {
+            if(e.kind() == ENTRY_CREATE) {
               modify_cb.onFileModified(filename.getFileName().toString());
             }
             else {
