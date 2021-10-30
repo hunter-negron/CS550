@@ -9,5 +9,7 @@ import com.lib.peer_client.FileInfo;
 
 public interface RMIClientInterface extends Remote {
   public FileInfo retrieve(String filename, int remotePeerId) throws RemoteException;
+  /* --- start PA3 change --- */
   public void invalidateFile(String filename) throws RemoteException;
+  /* ---- end PA3 change ---- */
 }

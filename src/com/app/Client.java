@@ -36,6 +36,9 @@ public class Client {
   private static int superpeerId;
   private static int timeToLive;
   private static int seq = 0;
+  private static String validationMethod; // "push" or "pull"
+  private static int timeToRefresh; // in minutes
+
 
   public static void PrintMessageLn(String str){
     System.out.println("PEER(" + myPeerId + "): " + str);
@@ -147,6 +150,16 @@ public class Client {
       JSONObject json = new JSONObject(rawJson);
       superpeerId = json.getJSONArray("peers").getInt(configId);
       timeToLive = json.getInt("timeToLive");
+      /* --- start PA3 change --- */
+      validationMethod = json.getString("validationMethod");
+      timeToRefresh = json.getInt("timeToRefresh");
+
+      if(!(validationMethod.equals("push") || validationMethod.equals("pull"))) {
+        // if the invalidation method is neither push nor pull
+        System.err.println("Invalid validation method \"" + validationMethod + "\". Exiting.");
+        System.exit(0);
+      }
+      /* ---- end PA3 change ---- */
       System.out.println("Topology type: " + json.getString("topologyType"));
     } catch(Exception ex) {
       System.err.println("EXCEPTION: Client Exception while PARSING json config: " + ex.toString());
@@ -183,7 +196,7 @@ public class Client {
         rfi.originPeerId = myPeerId;
         rfi.valid = true;
         rfi.lastVerified = new Date();
-        rfi.timeToRefresh = -1;
+        rfi.timeToRefresh = timeToRefresh;
         rfi.owner = true;
         pc.insertIntoFileStore(fn, rfi);
       }
@@ -224,7 +237,8 @@ public class Client {
               System.out.println("OnFileModified: " + filename);
               //System.out.println("OnFileModified: fileStore = " + pc.fileStore);
 
-              // the file is in the store so we know it was modified
+              if(validationMethod.equals("push")) {
+              // the file is in the store so we know it was modified <== WRONG!!
               //if(pc.fileStore.containsKey(filename)) {
                 RetrievedFileInfo rfi = pc.fileStore.get(filename);
                 rfi.version++;
@@ -258,7 +272,7 @@ public class Client {
                       System.err.println("EXCEPTION: Client Exception while DE-REGISTERING self-invalidated file: " + ex.toString());
                       ex.printStackTrace();
                     }*/
-                    System.out.println("YOU HAVE ILLEGALLY MODIFIED A FILE YOU DO NOT OWN. IT IS NOW INVALID AND DEREGISTERED.");
+                    System.out.println("Pushed-based: YOU HAVE ILLEGALLY MODIFIED A FILE YOU DO NOT OWN. IT IS NOW INVALID AND DEREGISTERED.");
                   }
                 }
                 catch(Exception ex) {
@@ -280,6 +294,19 @@ public class Client {
                   ex.printStackTrace();
                 }
               }*/
+              }
+              // validationMethod == "pull"
+              else {
+                RetrievedFileInfo rfi = pc.fileStore.get(filename);
+                if(rfi.owner) {
+                  // update the version if we're the owner of the file
+                  rfi.version++;
+                  pc.fileStore.replace(filename, rfi);
+                }
+                else {
+                  System.out.println("Pull-based: YOU HAVE ILLEGALLY MODIFIED A FILE YOU DO NOT OWN. IT IS NOW INVALID AND DEREGISTERED.");
+                }
+              }
             }
         /* ---- end PA3 change ---- */
         });

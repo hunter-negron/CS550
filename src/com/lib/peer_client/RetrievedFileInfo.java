@@ -9,6 +9,6 @@ public class RetrievedFileInfo implements Serializable {
   public int originPeerId;
   public boolean valid;
   public Date lastVerified;
-  public int timeToRefresh; // in minutes. should be -1 if owner == true
+  public int timeToRefresh; // in minutes.
   public boolean owner;
 }

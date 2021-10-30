@@ -23,6 +23,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
   private int id; // this superpeer ID
   private Map<MessageID, Query> queries; // buffer of query messages received from neighbors and forwarded
   /* --- start PA3 change --- */
+  // only used for push-based validation method
   private Map<MessageID, Invalidation> invalidations; // buffer of invalidation messages received from neighbors and forwarded
   /* ---- end PA3 change ---- */
 
@@ -71,6 +72,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
 
 
     /* --- start PA3 change --- */
+    // only used for the push-based validation method
     invalidations = new LinkedHashMap<MessageID, Invalidation>() {
         @Override
         protected boolean removeEldestEntry(final Map.Entry eldest) {
@@ -255,6 +257,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
   }
 
   /* --- start PA3 change --- */
+  // only called by peer when the push-based validation approach in enabled
   @Override
   public void forwardInvalidation(Invalidation inv) throws RemoteException {
     // works just like forwardQuery()
@@ -273,7 +276,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
             /* CALL INVALIDATE_FILE REMOTE METHOD HERE AND DEREGISTER THE FILE? */
             System.out.println("Invalidation: message id = " + inv.messageId + ", filename = " + inv.filename + ", originPeer = " + inv.originPeerId);
 
-            // call invalidateFile on the peer
+            // invalidate the file on the peer
             try{
               System.out.println("Superpeer " + id + ": forwardInvalidation() connecting to peer " + pid);
               RMIClientInterface peer = (RMIClientInterface)Naming.lookup("//localhost/peer/" + id + "/" + pid);

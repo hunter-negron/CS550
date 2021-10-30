@@ -90,7 +90,7 @@ public class PeerClient extends UnicastRemoteObject implements RMIClientInterfac
       RetrievedFileInfo rfi = fileStore.get(filename); // get the record so we can update it
       // make sure we don't invalidate a file that we own
       if(rfi.owner == true) {
-        System.out.println("Client " + id + " invalidateFile: we are the owner of the file \"" + filename + "\"");
+        System.out.println("Client " + id + " invalidateFile: we are the owner of the file \"" + filename + "\". Not invalidating.");
         return;
       }
       rfi.valid = false; // invalidate it

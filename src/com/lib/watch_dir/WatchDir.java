@@ -62,6 +62,8 @@ public class WatchDir {
             // UPDATE:
             // CREATE AND MODIFY SEEM TO BE SWTICHED.
             // I DON'T KNOW WHY BUT THIS WORKS (FOR NOW)
+            // UPDATE:
+            // THEY SWITCH SOMETIMES?? IDK. FIX THIS BUG LATER.
             if(e.kind() == ENTRY_MODIFY) {
               modify_cb.onFileModified(filename.getFileName().toString());
             }
