@@ -16,9 +16,17 @@ public class PeerClient extends UnicastRemoteObject implements RMIClientInterfac
   private int id;
   String dir;
 
+  /* --- start PA3 change --- */
+  private static Map<String, RetrievedFileInfo> fileStore;
+  /* ---- end PA3 change ---- */
+
   public PeerClient(String rmiInterfaceString, int peerId, String directory) throws RemoteException {
     id = peerId;
     dir = directory;
+
+    /* --- start PA3 change --- */
+    fileStore = new HashMap<String, RetrievedFileInfo>();
+    /* ---- end PA3 change ---- */
 
     try{
       System.out.println("Binding Client " + id + " RMI Interface to " + rmiInterfaceString + id);
@@ -63,4 +71,28 @@ public class PeerClient extends UnicastRemoteObject implements RMIClientInterfac
 
     return ret;
   }
+
+  /* --- start PA3 change --- */
+  public void insertIntoFileStore(String fn, RetrievedFileInfo rfi) {
+    fileStore.put(fn, rfi);
+  }
+
+  @Override
+  public void invalidateFile(String filename) {
+    System.out.println("Client " + id + " invalidateFile called: filename = " + filename);
+    if(fileStore.containsKey(filename)) {
+      RetrievedFileInfo rfi = fileStore.get(filename); // get the record so we can update it
+      // make sure we don't invalidate a file that we own
+      if(rfi.owner == true) {
+        System.out.println("Client " + id + " invalidateFile: we are the owner of the file \"" + filename + "\"");
+        return;
+      }
+      rfi.valid = false; // invalidate it
+      fileStore.replace(filename, rfi); // update the store
+    }
+    else {
+      System.out.println("Client " + id + " invalidateFile: we don't have the file \"" + filename + "\"");
+    }
+  }
+  /* ---- end PA3 change ---- */
 }

@@ -36,10 +36,6 @@ public class Client {
   private static int timeToLive;
   private static int seq = 0;
 
-  /* --- start PA3 change --- */
-  private static Map<String, RetrievedFileInfo> fileStore;
-  /* ---- end PA3 change ---- */
-
   public static void PrintMessageLn(String str){
     System.out.println("PEER(" + myPeerId + "): " + str);
   }
@@ -151,11 +147,6 @@ public class Client {
       System.exit(0);
     }
 
-    // initialize member variables
-    /* --- start PA3 change --- */
-    fileStore = new HashMap<String, RetrievedFileInfo>();
-    /* ---- end PA3 change ---- */
-
     try{
       centralServer = (RMIServerInterface)Naming.lookup(rmiServerStr + superpeerId); // connect to index server
     }
@@ -167,6 +158,12 @@ public class Client {
     try {
       peerIdStr = centralServer.register(rmiStr, sharedFiles, null);         // registering the files
 
+      System.out.println("My peer identifier is " + peerIdStr);
+
+      // need to get these strings dynamically
+      myPeerId = Integer.parseInt(peerIdStr.split("_")[1]);
+      PeerClient pc = new PeerClient(rmiStr + superpeerId + "/", myPeerId, dir);
+
       /* --- start PA3 change --- */
       for(String fn : sharedFiles) {
         RetrievedFileInfo rfi = new RetrievedFileInfo();
@@ -177,15 +174,9 @@ public class Client {
         rfi.lastVerified = new Date();
         rfi.timeToRefresh = -1;
         rfi.owner = true;
-        fileStore.put(fn, rfi);
+        pc.insertIntoFileStore(fn, rfi);
       }
       /* ---- end PA3 change ---- */
-
-      System.out.println("My peer identifier is " + peerIdStr);
-
-      // need to get these strings dynamically
-      myPeerId = Integer.parseInt(peerIdStr.split("_")[1]);
-      PeerClient pc = new PeerClient(rmiStr + superpeerId + "/", myPeerId, dir);
     }
     catch (Exception ex) {
       System.err.println("EXCEPTION: Client Exception while REGISTERING with central server: " + ex.toString());

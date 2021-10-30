@@ -7,7 +7,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 // import java.rmi.server.hostname;
 
-import com.lib.interfaces.RMIServerInterface;
+import com.lib.interfaces.*;
 
 public class IndexServer extends UnicastRemoteObject implements RMIServerInterface {
   final static String rmiServerStr = "//localhost/central_server";
@@ -261,12 +261,25 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     if(!invalidations.containsKey(inv.messageId)) {
       // we haven't seen this invalidation message before
 
-      ArrayList<Integer> peers = fileIndex.get(inv.filename);
-      for(int pid : peers) {
+      ArrayList<Integer> peerIds = fileIndex.get(inv.filename);
+      for(int pid : peerIds) {
         // if this is the origin server, DON'T invalidate the owner of the file
         if(!(inv.originServerId == id && inv.originPeerId == pid)) {
           /* CALL INVALIDATE_FILE REMOTE METHOD HERE AND DEREGISTER THE FILE? */
           System.out.println("Invalidation: message id = " + inv.messageId + ", filename = " + inv.filename + ", originPeer = " + inv.originPeerId);
+
+          try{
+            System.out.println("Superpeer " + id + ": forwardInvalidation() connecting to peer " + pid);
+            RMIClientInterface peer = (RMIClientInterface)Naming.lookup("//localhost/peer/" + id + "/" + pid);
+            if(peer != null)
+              peer.invalidateFile(inv.filename);
+            else
+              System.out.println("Superpeer " + id + ": Unable to connect to peer " + pid + ".");
+          }
+          catch(Exception e){
+            System.err.println("EXCEPTION: Superpeer " + id + " Exception while CONNECTING to peer client " + pid + ": " + e.toString());
+            e.printStackTrace();
+          }
         }
       }
 
