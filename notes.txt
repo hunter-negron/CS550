@@ -29,12 +29,6 @@ PUSH VALIDATIOIN METHOD
     this call will happen from the auto update mechanism thread
     may need to send TTL to server? included in INVALIDATION message
     TTL: then we have to handle whether the superpeer has the the INVALIDATION message before (just like queries)
-  if the auto-update mechanism detects file MODIFIED AND NOT THE OWNER, just deregister and delete it?
-    this is an issue and theoretically this case shouldn't exist
-    practically, a modification of a local copy of a foreign file should be treated just
-      like if the modification were to have happened on the master copy; only this time,
-      the modification is not valid and so this peer does not get the privelege of broadcasting
-      an INVALIDATION message to anyone. it basically just invalidated the file itself.
   add option to client command prompt to "modify" a file that the peer client owns for testing
     select from list of files the peer client owns
     modification: add a line of text or something basic
@@ -91,3 +85,9 @@ PUSH-BASED APPROACH
   new remote function for leafnode peer client to discard invalidated file
     called by the above remote function of the superpeer
     deletes file (UPDATE: NO.)
+  if the auto-update mechanism detects file MODIFIED AND NOT THE OWNER, just deregister and delete it?
+    this is an issue and theoretically this case shouldn't exist
+    practically, a modification of a local copy of a foreign file should be treated just
+      like if the modification were to have happened on the master copy; only this time,
+      the modification is not valid and so this peer does not get the privelege of broadcasting
+      an INVALIDATION message to anyone. it basically just invalidated the file itself.

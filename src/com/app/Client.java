@@ -219,6 +219,11 @@ public class Client {
         new WatchDir.ModifiedFileCallback() {
             @Override
             public void onFileModified(String filename) {
+              // update the version in the store
+              RetrievedFileInfo rfi = pc.fileStore.get(filename);
+              rfi.version++;
+
+              // construct the invalidation message to send
               Invalidation inv = new Invalidation();
               inv.messageId = new MessageID();
               inv.messageId.superpeerId = superpeerId;
@@ -228,12 +233,15 @@ public class Client {
               inv.originServerId = superpeerId;
               inv.originPeerId = myPeerId;
               inv.filename = filename;
-              //inv.version = ; // get from file store
+              inv.version = rfi.version; // get new version that will be in the file store
               try {
+                // only send the message and update the store if we're the owner
                 if(pc.fileStore.get(filename).owner == true) {
+                  pc.fileStore.replace(filename, rfi);
                   centralServer.forwardInvalidation(inv);
                 }
                 else {
+                  // if we are not the owner, we just self-invalidated a file
                   pc.fileStore.get(filename).valid = false;
                   try{
                     Vector<String> v = new Vector<String>();
