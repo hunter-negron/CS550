@@ -80,6 +80,15 @@ public class Client {
             FileInfo fileinfo = peer.retrieve(filename, peerId);
             System.out.println("Peer " + peerId + ": Retrieve end time =" + System.currentTimeMillis());
 
+            /* --- start PA3 change --- */
+            // add to file store
+            System.out.println("Trying to add \"" + fileinfo.filename + "\" into the fileStore.");
+            RetrievedFileInfo rfi = fileinfo.retrievedFileInfo;
+            rfi.lastVerified = new Date();
+            rfi.owner = false;
+            pc.insertIntoFileStore(fileinfo.filename, rfi);
+            /* ---- end PA3 change ---- */
+
             // Save file
             File f = new File(dir, fileinfo.filename);
             f.createNewFile();
@@ -93,14 +102,6 @@ public class Client {
             out.flush();
             out.close();
             // PrintMessageLn("Done writing data...");
-
-            /* --- start PA3 change --- */
-            // add to file store
-            RetrievedFileInfo rfi = fileinfo.retrievedFileInfo;
-            rfi.lastVerified = new Date();
-            rfi.owner = false;
-            pc.insertIntoFileStore(fileinfo.filename, rfi);
-            /* ---- end PA3 change ---- */
 
           }
           catch(Exception e){
@@ -220,44 +221,65 @@ public class Client {
             @Override
             public void onFileModified(String filename) {
               // update the version in the store
-              RetrievedFileInfo rfi = pc.fileStore.get(filename);
-              rfi.version++;
+              System.out.println("OnFileModified: " + filename);
+              //System.out.println("OnFileModified: fileStore = " + pc.fileStore);
 
-              // construct the invalidation message to send
-              Invalidation inv = new Invalidation();
-              inv.messageId = new MessageID();
-              inv.messageId.superpeerId = superpeerId;
-              inv.messageId.peerId = myPeerId;
-              inv.messageId.seq = seq++;
-              inv.timeToLive = timeToLive;
-              inv.originServerId = superpeerId;
-              inv.originPeerId = myPeerId;
-              inv.filename = filename;
-              inv.version = rfi.version; // get new version that will be in the file store
-              try {
-                // only send the message and update the store if we're the owner
-                if(pc.fileStore.get(filename).owner == true) {
-                  pc.fileStore.replace(filename, rfi);
-                  centralServer.forwardInvalidation(inv);
-                }
-                else {
-                  // if we are not the owner, we just self-invalidated a file
-                  pc.fileStore.get(filename).valid = false;
-                  try{
-                    Vector<String> v = new Vector<String>();
-                    v.add(filename);
-                    centralServer.deregister(peerIdStr, v);
+              // the file is in the store so we know it was modified
+              //if(pc.fileStore.containsKey(filename)) {
+                RetrievedFileInfo rfi = pc.fileStore.get(filename);
+                rfi.version++;
+
+                // construct the invalidation message to send
+                Invalidation inv = new Invalidation();
+                inv.messageId = new MessageID();
+                inv.messageId.superpeerId = superpeerId;
+                inv.messageId.peerId = myPeerId;
+                inv.messageId.seq = seq++;
+                inv.timeToLive = timeToLive;
+                inv.originServerId = superpeerId;
+                inv.originPeerId = myPeerId;
+                inv.filename = filename;
+                inv.version = rfi.version; // get new version that will be in the file store
+                try {
+                  // only send the message and update the store if we're the owner
+                  if(pc.fileStore.get(filename).owner == true) {
+                    pc.fileStore.replace(filename, rfi);
+                    centralServer.forwardInvalidation(inv);
                   }
-                  catch (Exception ex) {
-                    System.err.println("EXCEPTION: Client Exception while DE-REGISTERING self-invalidated file: " + ex.toString());
-                    ex.printStackTrace();
+                  else {
+                    // if we are not the owner, we just self-invalidated a file
+                    /*pc.fileStore.get(filename).valid = false;
+                    try{
+                      Vector<String> v = new Vector<String>();
+                      v.add(filename);
+                      centralServer.deregister(peerIdStr, v);
+                    }
+                    catch (Exception ex) {
+                      System.err.println("EXCEPTION: Client Exception while DE-REGISTERING self-invalidated file: " + ex.toString());
+                      ex.printStackTrace();
+                    }*/
+                    System.out.println("YOU HAVE ILLEGALLY MODIFIED A FILE YOU DO NOT OWN. IT IS NOW INVALID AND DEREGISTERED.");
                   }
-                  System.out.println("YOU HAVE ILLEGALLY MODIFIED A FILE YOU DO NOT OWN. IT IS NOW INVALID AND DEREGISTERED.");
                 }
-              }
-              catch(Exception ex) {
-                System.err.println("EXCEPTION: Client Exception while calling forwardInvalidation: " + ex.toString());
-              }
+                catch(Exception ex) {
+                  System.err.println("EXCEPTION: Client Exception while calling forwardInvalidation: " + ex.toString());
+                  ex.printStackTrace();
+                }
+              /*}
+              // the file is not in the store, so it was created
+              // this is just the call() code from above, but recontextualized
+              else{
+                try{
+                  // If any change is detected, the peer needs to read the directory again
+                  System.out.println("Change detected in the shared directory.");
+                  sharedFiles = ReadSharedDirectory(dir);
+                  centralServer.register(rmiStr, sharedFiles, peerIdStr);
+                }
+                catch (Exception ex) {
+                  System.err.println("EXCEPTION: Client Exception while RE-REGISTERING files: " + ex.toString());
+                  ex.printStackTrace();
+                }
+              }*/
             }
         /* ---- end PA3 change ---- */
         });

@@ -260,32 +260,40 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     // works just like forwardQuery()
     if(!invalidations.containsKey(inv.messageId)) {
       // we haven't seen this invalidation message before
+      System.out.println("forwardInvalidation: peer = " + inv.originPeerId + ", filename = " + inv.filename);
+      //System.out.println(fileIndex);
 
       ArrayList<Integer> peerIds = fileIndex.get(inv.filename);
-      for(int pid : peerIds) {
-        // if this is the origin server, DON'T invalidate the owner of the file
-        if(!(inv.originServerId == id && inv.originPeerId == pid)) {
-          /* CALL INVALIDATE_FILE REMOTE METHOD HERE AND DEREGISTER THE FILE? */
-          System.out.println("Invalidation: message id = " + inv.messageId + ", filename = " + inv.filename + ", originPeer = " + inv.originPeerId);
+      //System.out.println(peerIds);
+      if(peerIds != null) {
+        for(int i = 0; i < peerIds.size(); i++) {
+          int pid = peerIds.get(i);
+          // if this is the origin server, DON'T invalidate the owner of the file
+          if(!(inv.originServerId == id && inv.originPeerId == pid)) {
+            /* CALL INVALIDATE_FILE REMOTE METHOD HERE AND DEREGISTER THE FILE? */
+            System.out.println("Invalidation: message id = " + inv.messageId + ", filename = " + inv.filename + ", originPeer = " + inv.originPeerId);
 
-          // call invalidateFile on the peer
-          try{
-            System.out.println("Superpeer " + id + ": forwardInvalidation() connecting to peer " + pid);
-            RMIClientInterface peer = (RMIClientInterface)Naming.lookup("//localhost/peer/" + id + "/" + pid);
-            if(peer != null)
-              peer.invalidateFile(inv.filename);
-            else
-              System.out.println("Superpeer " + id + ": Unable to connect to peer " + pid + ".");
-          }
-          catch(Exception e){
-            System.err.println("EXCEPTION: Superpeer " + id + " Exception while CONNECTING to peer client " + pid + ": " + e.toString());
-            e.printStackTrace();
-          }
+            // call invalidateFile on the peer
+            try{
+              System.out.println("Superpeer " + id + ": forwardInvalidation() connecting to peer " + pid);
+              RMIClientInterface peer = (RMIClientInterface)Naming.lookup("//localhost/peer/" + id + "/" + pid);
+              if(peer != null)
+                peer.invalidateFile(inv.filename);
+              else
+                System.out.println("Superpeer " + id + ": Unable to connect to peer " + pid + ".");
+            }
+            catch(Exception e){
+              System.err.println("EXCEPTION: Superpeer " + id + " Exception while CONNECTING to peer client " + pid + ": " + e.toString());
+              e.printStackTrace();
+            }
 
-          // deregister the file from the peer
-          Vector<String> v = new Vector<String>();
-          v.add(inv.filename);
-          deregister(rpiIndex.get(pid).peerIdStr, v);
+            // deregister the file from the peer
+            // invalidated files are immediately deregistered, so forwardQuery()
+            // does not have to worry about adding invalid files to a QueryHit message
+            Vector<String> v = new Vector<String>();
+            v.add(inv.filename);
+            deregister(rpiIndex.get(pid).peerIdStr, v);
+          }
         }
       }
 

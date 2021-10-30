@@ -44,21 +44,37 @@ public class WatchDir {
       try {
         wk = ws.take();
 
+        int i=0;
         for (WatchEvent<?> e : wk.pollEvents()) {
           WatchEvent<Path> ev = cast(e);
           Path filename = ev.context();
+          System.out.println("\n" + ++i + ": " + filename.getFileName() + ": " + e.kind() + "\n");
+
+          // I think this is just an Ubuntu bug; ignore it
+          if(filename.getFileName().toString().contains(".goutputstream"))
+            continue;
 
           try{
             /* --- start PA3 change --- */
+            // this literally detects the WRONG event type.
+            // so to detect MODIFICATION, pass the filename back
+            // and if it is in the fileStore, then we know it's a modification
+            // UPDATE:
+            // CREATE AND MODIFY SEEM TO BE SWTICHED.
+            // I DON'T KNOW WHY BUT THIS WORKS (FOR NOW)
             if(e.kind() == ENTRY_MODIFY) {
               modify_cb.onFileModified(filename.getFileName().toString());
             }
+            else {
+              cb.call();
+            }
+            //modify_cb.onFileModified(filename.getFileName().toString());
             /* ---- end PA3 change ---- */
 
-            cb.call();
           }
           catch(Exception exp){
             System.out.printf("Exception while calling the callback " + exp.toString());
+            exp.printStackTrace();
           }
 
           // Uncomment for testing

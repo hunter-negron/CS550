@@ -69,11 +69,17 @@ public class PeerClient extends UnicastRemoteObject implements RMIClientInterfac
       e.printStackTrace();
     }
 
+    /* --- start PA3 change --- */
+    // add RetrievedFileInfo to FileInfo
+    ret.retrievedFileInfo = fileStore.get(filename);
+    /* ---- end PA3 change ---- */
+
     return ret;
   }
 
   /* --- start PA3 change --- */
   public void insertIntoFileStore(String fn, RetrievedFileInfo rfi) {
+    System.out.println("Inserting \"" + fn + "\" into the fileStore.");
     fileStore.put(fn, rfi);
   }
 

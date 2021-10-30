@@ -25,20 +25,19 @@ is there a way to mark a file READONLY after we download it?
   managing folders seems messy, but we might have to do that
 
 PUSH VALIDATIOIN METHOD
-  when the auto-update mechanism detects file MODIFIED AND IT IS THE OWNER, call the server with new version details
-    this call will happen from the auto update mechanism thread
-    may need to send TTL to server? included in INVALIDATION message
-    TTL: then we have to handle whether the superpeer has the the INVALIDATION message before (just like queries)
   add option to client command prompt to "modify" a file that the peer client owns for testing
     select from list of files the peer client owns
     modification: add a line of text or something basic
   wrap all this code in "if(validationmethod == push)" if statement
-  change superpeer to only include valid files in a queryhit
-    do we need this if we deregister invalid files?
-    should we be deregistering/deleting invalid files, or just marking them so?
-    if we're deleting, why do we need the invalid flag?
-    if we have invalid files, do we need to automatically re-retrieve them?
   revalidation procedure?
+    notify user when a file becomes invalid, give option to refresh it (retrieve the latest version)
+  shutting down a peer with an invalidated file throws an exception
+  what happens when two peers start with the same file (or file with the same name)?
+    who owns it?
+    is this allowed?
+    one will invalidate the other?
+  sometimes retrieving a file will trigger events of type CREATE, MODIFY, or BOTH.
+    I'm not sure when each happens but it's a problem
 
 PULL VALIDATION METHOD
   add extra fields to the FileInfo class as specified
@@ -91,3 +90,12 @@ PUSH-BASED APPROACH
       like if the modification were to have happened on the master copy; only this time,
       the modification is not valid and so this peer does not get the privelege of broadcasting
       an INVALIDATION message to anyone. it basically just invalidated the file itself.
+  when the auto-update mechanism detects file MODIFIED AND IT IS THE OWNER, call the server with new version details
+    this call will happen from the auto update mechanism thread
+    may need to send TTL to server? included in INVALIDATION message
+    TTL: then we have to handle whether the superpeer has the the INVALIDATION message before (just like queries)
+  change superpeer to only include valid files in a queryhit
+    do we need this if we deregister invalid files?
+    should we be deregistering/deleting invalid files, or just marking them so?
+    if we're deleting, why do we need the invalid flag?
+    if we have invalid files, do we need to automatically re-retrieve them?
