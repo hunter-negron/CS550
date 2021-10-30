@@ -230,7 +230,22 @@ public class Client {
               inv.filename = filename;
               //inv.version = ; // get from file store
               try {
-                centralServer.forwardInvalidation(inv);
+                if(pc.fileStore.get(filename).owner == true) {
+                  centralServer.forwardInvalidation(inv);
+                }
+                else {
+                  pc.fileStore.get(filename).valid = false;
+                  try{
+                    Vector<String> v = new Vector<String>();
+                    v.add(filename);
+                    centralServer.deregister(peerIdStr, v);
+                  }
+                  catch (Exception ex) {
+                    System.err.println("EXCEPTION: Client Exception while DE-REGISTERING self-invalidated file: " + ex.toString());
+                    ex.printStackTrace();
+                  }
+                  System.out.println("YOU HAVE ILLEGALLY MODIFIED A FILE YOU DO NOT OWN. IT IS NOW INVALID AND DEREGISTERED.");
+                }
               }
               catch(Exception ex) {
                 System.err.println("EXCEPTION: Client Exception while calling forwardInvalidation: " + ex.toString());

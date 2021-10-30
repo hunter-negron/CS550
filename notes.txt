@@ -35,9 +35,6 @@ PUSH VALIDATIOIN METHOD
       like if the modification were to have happened on the master copy; only this time,
       the modification is not valid and so this peer does not get the privelege of broadcasting
       an INVALIDATION message to anyone. it basically just invalidated the file itself.
-  new remote function for leafnode peer client to discard invalidated file
-    called by the above remote function of the superpeer
-    deletes file
   add option to client command prompt to "modify" a file that the peer client owns for testing
     select from list of files the peer client owns
     modification: add a line of text or something basic
@@ -47,6 +44,7 @@ PUSH VALIDATIOIN METHOD
     should we be deregistering/deleting invalid files, or just marking them so?
     if we're deleting, why do we need the invalid flag?
     if we have invalid files, do we need to automatically re-retrieve them?
+  revalidation procedure?
 
 PULL VALIDATION METHOD
   add extra fields to the FileInfo class as specified
@@ -90,3 +88,6 @@ PUSH-BASED APPROACH
   at startup, client should load all its files into the fileStore of RetrievedFileInfo's, and mark the OWNER field as TRUE
   new data structure for superpeer to track whethere an INVALIDATION message has been seen before
     do we need this? is it a problem if a superpeer receives the same INVALIDATION message twice?
+  new remote function for leafnode peer client to discard invalidated file
+    called by the above remote function of the superpeer
+    deletes file (UPDATE: NO.)

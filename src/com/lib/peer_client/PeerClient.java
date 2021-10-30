@@ -17,7 +17,7 @@ public class PeerClient extends UnicastRemoteObject implements RMIClientInterfac
   String dir;
 
   /* --- start PA3 change --- */
-  private static Map<String, RetrievedFileInfo> fileStore;
+  public static Map<String, RetrievedFileInfo> fileStore;
   /* ---- end PA3 change ---- */
 
   public PeerClient(String rmiInterfaceString, int peerId, String directory) throws RemoteException {

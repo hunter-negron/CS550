@@ -268,6 +268,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
           /* CALL INVALIDATE_FILE REMOTE METHOD HERE AND DEREGISTER THE FILE? */
           System.out.println("Invalidation: message id = " + inv.messageId + ", filename = " + inv.filename + ", originPeer = " + inv.originPeerId);
 
+          // call invalidateFile on the peer
           try{
             System.out.println("Superpeer " + id + ": forwardInvalidation() connecting to peer " + pid);
             RMIClientInterface peer = (RMIClientInterface)Naming.lookup("//localhost/peer/" + id + "/" + pid);
@@ -280,6 +281,11 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
             System.err.println("EXCEPTION: Superpeer " + id + " Exception while CONNECTING to peer client " + pid + ": " + e.toString());
             e.printStackTrace();
           }
+
+          // deregister the file from the peer
+          Vector<String> v = new Vector<String>();
+          v.add(inv.filename);
+          deregister(rpiIndex.get(pid).peerIdStr, v);
         }
       }
 
