@@ -2,11 +2,8 @@ package com.app.client;
 
 import java.util.*;
 import java.rmi.Naming;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.Files;
+import java.io.*;
+import java.nio.file.*;
 import java.util.concurrent.Callable;
 
 import com.lib.watch_dir.WatchDir;
@@ -45,7 +42,16 @@ public class Client {
   }
 
   public static void PrintClientOptions(){
-    PrintMessageLn("Enter the file name you would like to search. (type \"q\" to quit.)");
+    //PrintMessageLn("Enter the file name you would like to search. (type \"q\" to quit.)");
+    String prompt = "Command Options:\n";
+    prompt += "    filename to search\n";
+    prompt += "    'q' to quit\n";
+    prompt += "    'f' to print fileStore\n";
+    prompt += "    'm' for modification options\n";
+    prompt += "    'r' for refresh options\n";
+    prompt += "Enter your command: ";
+    PrintMessageLn(prompt);
+
   }
 
   public static Vector<String> ReadSharedDirectory(String dir){
@@ -344,13 +350,13 @@ public class Client {
                   RMIClientInterface peer = (RMIClientInterface)Naming.lookup(rmiStr + rfi.originServerId + "/" + rfi.originPeerId);
                   if(peer != null) {
                     if(peer.poll(filename, rfi.version)) {
-                      System.out.println("Valid :)");
+                      //System.out.println("Valid :)");
                       // poll returns true so this version of the file is still valid
                       rfi.lastVerified = new Date();
                       rfi.valid = true;
                     }
                     else {
-                      System.out.println("Not valid :(");
+                      //System.out.println("Not valid :(");
                       // poll returns false so we have an invalid copy. deregister it
                       rfi.lastVerified = new Date(); // should I do this here?
                       rfi.valid = false;
@@ -409,6 +415,7 @@ public class Client {
       strInput = sc.nextLine();
 
       if(strInput.length() != 0){
+        // 'f' option to print fileStore (for debugging)
         if(strInput.equals("f")){
           System.out.println("\n{");
           for (Map.Entry<String, RetrievedFileInfo> entry : pc.fileStore.entrySet()) {
@@ -427,11 +434,96 @@ public class Client {
           continue;
         }
 
+        // 'q' option to quit
         if(strInput.equals("q")){
           PrintMessageLn("Quitting.");
           System.exit(0); // This will trigger the shutdown hook so files will be regregistered.
         }
 
+        //'m' option to modify a file
+        if(strInput.equals("m")){
+          // Only list files that we own because we can only modify files that we own
+          String listOfFiles = "";
+          for (Map.Entry<String, RetrievedFileInfo> entry : pc.fileStore.entrySet()) {
+            String filename = entry.getKey();
+            RetrievedFileInfo rfi = entry.getValue();
+            if(rfi.owner) {
+              listOfFiles += "    " + filename + "\n";
+            }
+          }
+
+          // no filenames were appended, so we don't have any files to modify
+          if(listOfFiles.equals("")) {
+            System.out.println("We do not own any files to modify.");
+            continue;
+          }
+
+          System.out.print("Select one of these files modify: \n" + listOfFiles);
+
+          // get the filename and error check
+          strInput = sc.nextLine();
+          if(strInput == null || pc.fileStore.get(strInput) == null || !pc.fileStore.get(strInput).owner) {
+            System.out.println("We don't own that file. Returning.");
+            continue;
+          }
+
+          // modify the file by appending a character
+          try {
+            String a = "a";
+            BufferedWriter writer = new BufferedWriter(new FileWriter((new File(dir, strInput)).getAbsolutePath(), true));
+            writer.write(a);
+            writer.close();
+          }
+          catch(Exception e) {
+            System.err.println("EXCEPTION trying to open file \"" + strInput + "\": " + e.toString());
+          }
+          continue;
+        }
+
+        //'r' option to refresh a file
+        if(strInput.equals("r")){
+          // Only list files that are invalid
+          String listOfFiles = "";
+          for (Map.Entry<String, RetrievedFileInfo> entry : pc.fileStore.entrySet()) {
+            String filename = entry.getKey();
+            RetrievedFileInfo rfi = entry.getValue();
+            if(!rfi.valid) {
+              listOfFiles += "    " + filename + "\n";
+            }
+          }
+
+          // no filenames were appended, so we don't have any invalid files
+          if(listOfFiles.equals("")) {
+            System.out.println("We do not have any invalid files.");
+            continue;
+          }
+
+          System.out.print("Select one of these files refresh: \n" + listOfFiles);
+
+          // get the filename and error check. It's okay to refresh a valid file
+          strInput = sc.nextLine();
+          if(strInput == null || pc.fileStore.get(strInput) == null) {
+            System.out.println("We don't have that file. Returning.");
+            continue;
+          }
+
+          // retrieve the file
+          try {
+            RetrievedFileInfo rfi = pc.fileStore.get(strInput);
+            PrintMessageLn("Connecting to peer " + rfi.originPeerId);
+            RMIClientInterface peer = (RMIClientInterface)Naming.lookup(rmiStr + rfi.originServerId + "/" + rfi.originPeerId);
+            if(peer != null)
+              retrieveFile(strInput, rfi.originPeerId, peer);
+            else
+              PrintMessageLn("Unable to connect to peer " + rfi.originPeerId + ".");
+          }
+          catch(Exception e){
+            // e.printStackTrace();
+          }
+          continue;
+        }
+
+        // a filename was entered: search
         try{
           // Get list of peer IDs who have desired file
           //ArrayList<Integer> clientList = centralServer.search(strInput);

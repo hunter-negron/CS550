@@ -48,7 +48,7 @@ public class WatchDir {
         for (WatchEvent<?> e : wk.pollEvents()) {
           WatchEvent<Path> ev = cast(e);
           Path filename = ev.context();
-          System.out.println("\n" + ++i + ": " + filename.getFileName() + ": " + e.kind() + "\n");
+          System.out.println(++i + ": " + filename.getFileName() + ": " + e.kind());
 
           // I think this is just an Ubuntu bug; ignore it
           if(filename.getFileName().toString().contains(".goutputstream"))
@@ -64,7 +64,7 @@ public class WatchDir {
             // I DON'T KNOW WHY BUT THIS WORKS (FOR NOW)
             // UPDATE:
             // THEY SWITCH SOMETIMES?? IDK. FIX THIS BUG LATER.
-            if(e.kind() == ENTRY_CREATE) {
+            if(e.kind() == ENTRY_MODIFY) {
               modify_cb.onFileModified(filename.getFileName().toString());
             }
             else {

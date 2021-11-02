@@ -26,12 +26,6 @@ shutting down a client that has invalid/deregistered files throws an exception
 I don't understand when the watch directory service returns EVENT_MODIFY vs EVENT_CREATE
 
 PUSH VALIDATIOIN METHOD
-  add option to client command prompt to "modify" a file that the peer client owns for testing
-    select from list of files the peer client owns
-    modification: add a line of text or something basic
-  wrap all this code in "if(validationmethod == push)" if statement
-  revalidation procedure?
-    notify user when a file becomes invalid, give option to refresh it (retrieve the latest version)
   shutting down a peer with an invalidated file throws an exception
   what happens when two peers start with the same file (or file with the same name)?
     who owns it?
@@ -41,8 +35,6 @@ PUSH VALIDATIOIN METHOD
     I'm not sure when each happens but it's a problem
 
 PULL VALIDATION METHOD
-  add  option to client terminal prompt to "refresh" an outdated file
-    download a new copy of that file, update data structure accordingly
   right now to find out if TTR expired, we keep track of the lastVerified timestamp and when thread wake up, if more than TTR has passed since then, we poll
     poll just returns true or false depending on the validity of the version of the file. true = just update lastVerfied. false = invalidate & deregister
     however, the assignment seems to imply that the best way is to decrement TTR until it is zero and then invalidate the file
@@ -52,6 +44,7 @@ PULL VALIDATION METHOD
   assignment suggests to poll the SERVER but ours is written to poll the PEER CLIENT.
     we did it this way because the client keeps track of the validity of all its files. invalid files get deregistered
   factor out all "invalidate and deregister" blocks of code into a single function
+  print statements for polling functions get annoying so they have been commented out
 
 _____________________________________________________________________________________________________
 _____________________________________________________________________________________________________
@@ -80,6 +73,8 @@ PULL-BASED APPROACH
     eager polling seems easier than lazy polling
     otherwise return new TTR
   parse validationMethod and timeToRefresh from the config file
+  add  option to client terminal prompt to "refresh" an outdated file
+    download a new copy of that file, update data structure accordingly
 
 PUSH-BASED APPROACH
   implement INVALIDATION message class
@@ -117,3 +112,9 @@ PUSH-BASED APPROACH
     should we be deregistering/deleting invalid files, or just marking them so?
     if we're deleting, why do we need the invalid flag?
     if we have invalid files, do we need to automatically re-retrieve them?
+  add option to client command prompt to "modify" a file that the peer client owns for testing
+    select from list of files the peer client owns
+    modification: add a line of text or something basic
+  wrap all this code in "if(validationmethod == push)" if statement
+  revalidation procedure?
+    notify user when a file becomes invalid, give option to refresh it (retrieve the latest version)
