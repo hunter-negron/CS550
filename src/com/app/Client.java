@@ -279,7 +279,7 @@ public class Client {
                       System.err.println("EXCEPTION: Client Exception while DE-REGISTERING self-invalidated file: " + ex.toString());
                       ex.printStackTrace();
                     }*/
-                    System.out.println("Pushed-based: YOU HAVE ILLEGALLY MODIFIED A FILE YOU DO NOT OWN. IT IS NOW INVALID AND DEREGISTERED.");
+                    System.out.println("Pushed-based: YOU HAVE ILLEGALLY MODIFIED A FILE YOU DO NOT OWN." /*+ " IT IS NOW INVALID AND DEREGISTERED."*/);
                   }
                 }
                 catch(Exception ex) {
@@ -311,7 +311,7 @@ public class Client {
                   pc.fileStore.replace(filename, rfi);
                 }
                 else {
-                  System.out.println("Pull-based: YOU HAVE ILLEGALLY MODIFIED A FILE YOU DO NOT OWN. IT IS NOW INVALID AND DEREGISTERED.");
+                  System.out.println("Pull-based: YOU HAVE ILLEGALLY MODIFIED A FILE YOU DO NOT OWN." /*+ " IT IS NOW INVALID AND DEREGISTERED."*/);
                 }
               }
             }
