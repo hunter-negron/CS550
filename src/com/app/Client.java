@@ -34,7 +34,7 @@ public class Client {
   private static int timeToLive;
   private static int seq = 0;
   private static String validationMethod; // "push" or "pull"
-  private static int timeToRefresh; // in minutes
+  private static int timeToRefresh; // in seconds
 
 
   public static void PrintMessageLn(String str){
