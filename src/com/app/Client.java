@@ -44,11 +44,11 @@ public class Client {
   public static void PrintClientOptions(){
     //PrintMessageLn("Enter the file name you would like to search. (type \"q\" to quit.)");
     String prompt = "Command Options:\n";
-    prompt += "    filename to search\n";
-    prompt += "    'q' to quit\n";
-    prompt += "    'f' to print fileStore\n";
-    prompt += "    'm' for modification options\n";
-    prompt += "    'r' for refresh options\n";
+    prompt += "Enter filename to search. Or choose one of the following options\n";
+    prompt += "  q - quit\n";
+    prompt += "  f - print fileStore\n";
+    prompt += "  m - modification options\n";
+    prompt += "  r - refresh options\n";
     prompt += "Enter your command: ";
     PrintMessageLn(prompt);
 
@@ -246,7 +246,6 @@ public class Client {
 
               if(validationMethod.equals("push")) {
               // the file is in the store so we know it was modified <== WRONG!!
-              //if(pc.fileStore.containsKey(filename)) {
                 RetrievedFileInfo rfi = pc.fileStore.get(filename);
                 rfi.version++;
 
@@ -269,16 +268,6 @@ public class Client {
                   }
                   else {
                     // if we are not the owner, we just self-invalidated a file
-                    /*pc.fileStore.get(filename).valid = false;
-                    try{
-                      Vector<String> v = new Vector<String>();
-                      v.add(filename);
-                      centralServer.deregister(peerIdStr, v);
-                    }
-                    catch (Exception ex) {
-                      System.err.println("EXCEPTION: Client Exception while DE-REGISTERING self-invalidated file: " + ex.toString());
-                      ex.printStackTrace();
-                    }*/
                     System.out.println("Pushed-based: YOU HAVE ILLEGALLY MODIFIED A FILE YOU DO NOT OWN." /*+ " IT IS NOW INVALID AND DEREGISTERED."*/);
                   }
                 }
@@ -286,24 +275,8 @@ public class Client {
                   System.err.println("EXCEPTION: Client Exception while calling forwardInvalidation: " + ex.toString());
                   ex.printStackTrace();
                 }
-              /*}
-              // the file is not in the store, so it was created
-              // this is just the call() code from above, but recontextualized
-              else{
-                try{
-                  // If any change is detected, the peer needs to read the directory again
-                  System.out.println("Change detected in the shared directory.");
-                  sharedFiles = ReadSharedDirectory(dir);
-                  centralServer.register(rmiStr, sharedFiles, peerIdStr);
-                }
-                catch (Exception ex) {
-                  System.err.println("EXCEPTION: Client Exception while RE-REGISTERING files: " + ex.toString());
-                  ex.printStackTrace();
-                }
-              }*/
               }
-              // validationMethod == "pull"
-              else {
+              else { // validationMethod == "pull"
                 RetrievedFileInfo rfi = pc.fileStore.get(filename);
                 if(rfi.owner) {
                   // update the version if we're the owner of the file
@@ -417,20 +390,21 @@ public class Client {
       if(strInput.length() != 0){
         // 'f' option to print fileStore (for debugging)
         if(strInput.equals("f")){
-          System.out.println("\n{");
           for (Map.Entry<String, RetrievedFileInfo> entry : pc.fileStore.entrySet()) {
             String filename = entry.getKey();
             RetrievedFileInfo rfi = entry.getValue();
-            System.out.println("  {filename:      " + filename);
-            System.out.println("  version:        " + rfi.version);
-            System.out.println("  originServerId; " + rfi.originServerId);
-            System.out.println("  originPeerId:   " + rfi.originPeerId);
-            System.out.println("  valid:          " + rfi.valid);
-            System.out.println("  lastVerified:   " + rfi.lastVerified);
-            System.out.println("  timeToRefresh:  " + rfi.timeToRefresh);
-            System.out.println("  owner:          " + rfi.owner + "},");
+            // System.out.println("  {filename:      " + filename);
+            System.out.println();
+            System.out.println(filename);
+            System.out.println("\tversion:        " + rfi.version);
+            System.out.println("\toriginServerId: " + rfi.originServerId);
+            System.out.println("\toriginPeerId:   " + rfi.originPeerId);
+            System.out.println("\tvalid:          " + rfi.valid);
+            System.out.println("\tlastVerified:   " + rfi.lastVerified);
+            System.out.println("\ttimeToRefresh:  " + rfi.timeToRefresh);
+            System.out.println("\towner:          " + rfi.owner);
           }
-          System.out.println("}\n");
+          System.out.println();
           continue;
         }
 
@@ -448,7 +422,7 @@ public class Client {
             String filename = entry.getKey();
             RetrievedFileInfo rfi = entry.getValue();
             if(rfi.owner) {
-              listOfFiles += "    " + filename + "\n";
+              listOfFiles += "\t" + filename + "\n";
             }
           }
 
@@ -458,7 +432,8 @@ public class Client {
             continue;
           }
 
-          System.out.print("Select one of these files modify: \n" + listOfFiles);
+          System.out.print("List of owned files: \n" + listOfFiles);
+          System.out.print("Enter the filename you want to modify: \n");
 
           // get the filename and error check
           strInput = sc.nextLine();
