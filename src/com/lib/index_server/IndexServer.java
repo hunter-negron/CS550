@@ -256,6 +256,8 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     QueryHit qh = new QueryHit();
     qh.superpeerId = new ArrayList<Integer>();
     qh.peerId = new ArrayList<Integer>();
+    qh.lastModifiedTIme = new ArrayList<Date>();
+    qh.origin = new ArrayList<Boolean>();
 
     System.out.println("Query received: message id = " + q.messageId + ", filename = " + q.filename + ", timeToLive = " + q.timeToLive);
     queries.put(q.messageId, q); // LinkedHashMap so size is controlled automatically

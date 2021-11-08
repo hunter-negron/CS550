@@ -156,24 +156,30 @@ public class Client {
             query.messageId.seq = seq++;
             query.timeToLive = timeToLive;
             query.filename = strInput;
+            System.out.println("Searching file: " + strInput);
             QueryHit queryHit = centralServer.forwardQuery(query);
+
+            if(queryHit.peerId.size() == 0){
+              System.out.println("Received 0 query hit responses.");
+              continue;
+            }
 
             int index = ((int)(Math.random() * 100)) % queryHit.peerId.size();
 
             queryHit.peerId.get(index);
             queryHit.superpeerId.get(index);
 
-            try{
-              PrintMessageLn("Connecting to peer " + queryHit.peerId.get(index));
-              RMIClientInterface peer = (RMIClientInterface)Naming.lookup(rmiStr + queryHit.superpeerId.get(index) + "/" + queryHit.peerId.get(index));
-              if(peer != null)
-                retrieveFile(strInput, queryHit.peerId.get(index), peer);
-              else
-                PrintMessageLn("Unable to connect to peer " + queryHit.peerId.get(index) + ".");
-            }
-            catch(Exception e){
-              // e.printStackTrace();
-            }
+            // try{
+            //   PrintMessageLn("Connecting to peer " + queryHit.peerId.get(index));
+            //   RMIClientInterface peer = (RMIClientInterface)Naming.lookup(rmiStr + queryHit.superpeerId.get(index) + "/" + queryHit.peerId.get(index));
+            //   if(peer != null)
+            //     retrieveFile(strInput, queryHit.peerId.get(index), peer);
+            //   else
+            //     PrintMessageLn("Unable to connect to peer " + queryHit.peerId.get(index) + ".");
+            // }
+            // catch(Exception e){
+            //   // e.printStackTrace();
+            // }
 
             int originIndex = -1;
             for(int x = 0; x < queryHit.peerId.size(); x++){
@@ -181,16 +187,22 @@ public class Client {
                 originIndex = x;
             }
 
-
-            for(int y = 0; y < queryHit.peerId.size(); y++){
+            // System.out.println("queryHit.peerId.size() " + queryHit.peerId.size());
+            // System.out.println("queryHit.lastModifiedTIme.size() " + queryHit.lastModifiedTIme.size());
+            // System.out.println("originIndex " + originIndex);
+            for(int y = 0; y < queryHit.lastModifiedTIme.size(); y++){
               totalResults += 1;
-              if(queryHit.lastModifiedTIme.get(originIndex) != queryHit.lastModifiedTIme.get(y)){
+
+              if(originIndex >= 0 && queryHit.lastModifiedTIme.get(originIndex) != queryHit.lastModifiedTIme.get(y)){
                 invalidQueries += 1;
               }
             }
           }
         }
       }
+
+      System.out.println("Number of query hit results = " + totalResults);
+      System.out.println("Number of invalid query hit results = " + invalidQueries);
     }
     catch (Exception ex) {
       System.err.println("EXCEPTION: Client Exception while SEARCHING to central sever: " + ex.toString());
@@ -201,6 +213,7 @@ public class Client {
   public static void runPushTest(){
     System.out.println("========================== TEST PUSH APPROACH ==========================");
     int peerCount = 17, fileCount = 4, iterations = 0;
+    // int peerCount = 2, fileCount = 6, iterations = 5;
     long startTs, endTs;
     long diff;
 
@@ -210,7 +223,7 @@ public class Client {
     endTs = System.currentTimeMillis();
 
     diff = endTs - startTs;
-    System.out.println("TEST RESULT 1:");
+    // System.out.println("TEST RESULT 1:");
     System.out.println("Number of queries = " + peerCount*fileCount*iterations + ", time = " + diff + " ms");
     System.out.println("Average time per request = " + diff/(peerCount*fileCount) + " ms");
 
