@@ -1,5 +1,5 @@
 {
-  "topologyType": "all2all",
+  "topologyType": "simple",
 
   "superpeers": [
     [1],

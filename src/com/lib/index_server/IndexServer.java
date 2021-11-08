@@ -5,6 +5,7 @@ import java.util.Map.Entry;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import com.lib.peer_client.RetrievedFileInfo;
 // import java.rmi.server.hostname;
 
 import com.lib.interfaces.*;
@@ -15,6 +16,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
 
   private Map<String, ArrayList<Integer>> fileIndex; // to search for peer ids for a particular file
   private Map<Integer, RegisteredPeerInfo> rpiIndex; // to search for peer info from peer ids
+  private Map<String, RetrievedFileInfo> fileInfo;
 
   private final int RANDOM_UPPER_BOUND = 9999999;
   private Random rand = new Random(); // generate randon numbers to assign to each client.
@@ -25,6 +27,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
   /* --- start PA3 change --- */
   // only used for push-based validation method
   private Map<MessageID, Invalidation> invalidations; // buffer of invalidation messages received from neighbors and forwarded
+  private Map<String, RetrievedFileInfo> fileStore;
   /* ---- end PA3 change ---- */
 
   public IndexServer(int superpeerId, String rmiInterfaceString, ArrayList<Integer> neighborIds, int bufferSize) throws RemoteException {
@@ -41,6 +44,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     incomingPeerId = 0; // setting the initital count as 0
     fileIndex = new HashMap<String, ArrayList<Integer>>();
     rpiIndex = new HashMap<Integer, RegisteredPeerInfo>();
+    fileStore = new HashMap<String, RetrievedFileInfo>();
     id = superpeerId;
 
     // a LinkedHashMap allows us to efficiently remove the oldest element
@@ -143,6 +147,7 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
           System.out.println("Updating file list for peer " + rpi.peerId + ".");
           rpi.filenames = filenames;
           updateFileList(filenames, rpi);
+          // updateFileStore(_fileStore, rpi.peerId);
         }
       }
 
@@ -160,9 +165,15 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
 
     rpiIndex.put(rpi.peerId, rpi);
     updateFileList(filenames, rpi);
+    // updateFileStore(_fileStore, rpi.peerId);
 
     return rpi.peerIdStr;
   }
+
+  // @Override
+  // public void updateFileStore(Map<String, RetrievedFileInfo> fileStore, int peerId){
+
+  // }
 
   @Override
   public ArrayList<Integer> search(String filename) throws RemoteException {
@@ -213,6 +224,24 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
     }
   }
 
+  public void updateFileStore(Map<String, RetrievedFileInfo> __fileStore, int pId){
+    Iterator<Entry<String, RetrievedFileInfo>> it = __fileStore.entrySet().iterator();
+    RetrievedFileInfo rfi;
+    HashMap.Entry<String, RetrievedFileInfo> fsp;
+
+    while (it.hasNext()){
+      fsp = (Map.Entry<String, RetrievedFileInfo>)it.next();
+      rfi = fsp.getValue();
+
+      if(!fileStore.containsKey(rfi.filename)){
+        fileStore.put(rfi.filename, rfi);
+      }
+      else if (fileStore.get(rfi.filename).originPeerId == pId) {
+        fileStore.put(rfi.filename, rfi);
+      }
+    }
+  }
+
   @Override
   public void testCall() throws RemoteException {}
 
@@ -237,6 +266,8 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
         for(int p : result) {
           qh.superpeerId.add(id);
           qh.peerId.add(p);
+          qh.lastModifiedTIme.add(fileStore.get(q.filename).lastVerified);
+          qh.origin.add(fileStore.get(q.filename).originPeerId == p ? true : false);
         }
       }
 
@@ -247,6 +278,8 @@ public class IndexServer extends UnicastRemoteObject implements RMIServerInterfa
           if(response != null){
             qh.superpeerId.addAll(response.superpeerId);
             qh.peerId.addAll(response.peerId);
+            qh.lastModifiedTIme.addAll(response.lastModifiedTIme);
+            qh.origin.addAll(response.origin);
           }
         }
       }

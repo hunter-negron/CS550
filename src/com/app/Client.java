@@ -49,9 +49,14 @@ public class Client {
     prompt += "  f - print fileStore\n";
     prompt += "  m - modification options\n";
     prompt += "  r - refresh options\n";
+    prompt += "\n";
+    prompt += "Test options\n";
+    prompt += "  runPushTest           - start test for push based approach\n";
+    prompt += "  runRandomModification - start random file modification\n";
+    prompt += "\n";
+
     prompt += "Enter your command: ";
     PrintMessageLn(prompt);
-
   }
 
   public static Vector<String> ReadSharedDirectory(String dir){
@@ -129,6 +134,112 @@ public class Client {
     }
   }
 
+  public static void testIterations(int peerCount, int fileCount, int iterations){
+    int fileOffset = superpeerId + myPeerId;
+    int totalResults = 0, invalidQueries = 0;
+    int i = 0;
+
+    try{
+      for(int k = 0; k < iterations; k++){
+        for (i = 0; i < peerCount; i++) {
+          if(i == fileOffset){
+            continue;
+          }
+
+          for(int j = 0; j < fileCount; j++){
+            String strInput = "peer" + i + "_small_file" + j;
+
+            Query query = new Query();
+            query.messageId = new MessageID();
+            query.messageId.superpeerId = superpeerId;
+            query.messageId.peerId = myPeerId;
+            query.messageId.seq = seq++;
+            query.timeToLive = timeToLive;
+            query.filename = strInput;
+            QueryHit queryHit = centralServer.forwardQuery(query);
+
+            int index = ((int)(Math.random() * 100)) % queryHit.peerId.size();
+
+            queryHit.peerId.get(index);
+            queryHit.superpeerId.get(index);
+
+            try{
+              PrintMessageLn("Connecting to peer " + queryHit.peerId.get(index));
+              RMIClientInterface peer = (RMIClientInterface)Naming.lookup(rmiStr + queryHit.superpeerId.get(index) + "/" + queryHit.peerId.get(index));
+              if(peer != null)
+                retrieveFile(strInput, queryHit.peerId.get(index), peer);
+              else
+                PrintMessageLn("Unable to connect to peer " + queryHit.peerId.get(index) + ".");
+            }
+            catch(Exception e){
+              // e.printStackTrace();
+            }
+
+            int originIndex = -1;
+            for(int x = 0; x < queryHit.peerId.size(); x++){
+              if(queryHit.origin.get(x))
+                originIndex = x;
+            }
+
+
+            for(int y = 0; y < queryHit.peerId.size(); y++){
+              totalResults += 1;
+              if(queryHit.lastModifiedTIme.get(originIndex) != queryHit.lastModifiedTIme.get(y)){
+                invalidQueries += 1;
+              }
+            }
+          }
+        }
+      }
+    }
+    catch (Exception ex) {
+      System.err.println("EXCEPTION: Client Exception while SEARCHING to central sever: " + ex.toString());
+      ex.printStackTrace();
+    }
+  }
+
+  public static void runPushTest(){
+    System.out.println("========================== TEST PUSH APPROACH ==========================");
+    int peerCount = 17, fileCount = 4, iterations = 0;
+    long startTs, endTs;
+    long diff;
+
+    startTs = System.currentTimeMillis();
+    iterations = 1;
+    testIterations(peerCount, fileCount, iterations);
+    endTs = System.currentTimeMillis();
+
+    diff = endTs - startTs;
+    System.out.println("TEST RESULT 1:");
+    System.out.println("Number of queries = " + peerCount*fileCount*iterations + ", time = " + diff + " ms");
+    System.out.println("Average time per request = " + diff/(peerCount*fileCount) + " ms");
+
+    System.out.println("-----------------------------------------------------------------------------------------");
+  }
+
+  public static void runRandomModification(){
+    System.out.println("========================== RUNNING RANDOM UPDATE ==========================");
+
+    while(true){
+      int index = ((int)(Math.random() * 100)) % sharedFiles.size();
+      String file = sharedFiles.get(index);
+      System.out.println("Modifying file number = " + index + ", name = " + file);
+
+      try {
+        String a = "test";
+        BufferedWriter writer = new BufferedWriter(new FileWriter((new File(dir, file)).getAbsolutePath(), true));
+        writer.write(a);
+        writer.close();
+      }
+      catch(Exception e) {
+        System.err.println("runRandomModification: EXCEPTION trying to open file \"" + file + "\": " + e.toString());
+      }
+
+      try { Thread.sleep(3000); } catch(Exception e){}
+    }
+    // System.out.println("-----------------------------------------------------------------------------------------");
+  }
+
   public static void main(String[] args) {
     // Check if the name to the shared directory is provided
     if(args.length != 3) {
@@ -198,6 +309,7 @@ public class Client {
       /* --- start PA3 change --- */
       for(String fn : sharedFiles) {
         RetrievedFileInfo rfi = new RetrievedFileInfo();
+        rfi.filename = fn;
         rfi.version = 1;
         rfi.originServerId = superpeerId;
         rfi.originPeerId = myPeerId;
@@ -206,6 +318,14 @@ public class Client {
         rfi.timeToRefresh = timeToRefresh;
         rfi.owner = true;
         pc.insertIntoFileStore(fn, rfi);
+      }
+
+      try {
+        centralServer.updateFileStore(pc.fileStore, myPeerId);
+      }
+      catch(Exception e) {
+        System.err.println("EXCEPTION: Client Exception while UPDATING the file store: " + e.toString());
+        e.printStackTrace();
       }
       /* ---- end PA3 change ---- */
     }
@@ -286,6 +406,14 @@ public class Client {
                 else {
                   System.out.println("Pull-based: YOU HAVE ILLEGALLY MODIFIED A FILE YOU DO NOT OWN." /*+ " IT IS NOW INVALID AND DEREGISTERED."*/);
                 }
+              }
+
+              try {
+                centralServer.updateFileStore(pc.fileStore, myPeerId);
+              }
+              catch(Exception e) {
+                System.err.println("EXCEPTION: Client Exception while UPDATING the file store: " + e.toString());
+                e.printStackTrace();
               }
             }
         /* ---- end PA3 change ---- */
@@ -495,6 +623,16 @@ public class Client {
           catch(Exception e){
             // e.printStackTrace();
           }
+          continue;
+        }
+
+        if(strInput.equals("runPushTest")){
+          runPushTest();
+          continue;
+        }
+
+        if(strInput.equals("runRandomModification")){
+          runRandomModification();
           continue;
         }
 

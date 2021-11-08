@@ -14,4 +14,6 @@ public class QueryHit implements Serializable {
   // this information to connect to a peer
   public ArrayList<Integer> superpeerId;
   public ArrayList<Integer> peerId;
+  public ArrayList<Date> lastModifiedTIme;
+  public ArrayList<Boolean> origin;
 }
