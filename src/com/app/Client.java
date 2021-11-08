@@ -51,7 +51,7 @@ public class Client {
     prompt += "  r - refresh options\n";
     prompt += "\n";
     prompt += "Test options\n";
-    prompt += "  runPushTest           - start test for push based approach\n";
+    prompt += "  runPushPullTest       - start test for push based approach\n";
     prompt += "  runRandomModification - start random file modification\n";
     prompt += "\n";
 
@@ -201,7 +201,6 @@ public class Client {
         }
       }
 
-      System.out.println("Number of query hit results = " + totalResults);
       System.out.println("Number of invalid query hit results = " + invalidQueries);
     }
     catch (Exception ex) {
@@ -210,9 +209,9 @@ public class Client {
     }
   }
 
-  public static void runPushTest(){
+  public static void runPushPullTest(){
     System.out.println("========================== TEST PUSH APPROACH ==========================");
-    int peerCount = 17, fileCount = 4, iterations = 0;
+    int peerCount = 17, fileCount = 4, iterations = 5;
     // int peerCount = 2, fileCount = 6, iterations = 5;
     long startTs, endTs;
     long diff;
@@ -639,8 +638,8 @@ public class Client {
           continue;
         }
 
-        if(strInput.equals("runPushTest")){
-          runPushTest();
+        if(strInput.equals("runPushPullTest")){
+          runPushPullTest();
           continue;
         }
 
